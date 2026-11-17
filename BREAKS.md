@@ -29,3 +29,10 @@ Root cause: Default Python-urllib User-Agent header was rejected by Cloudflare o
 Fix: Configured an explicit User-Agent header (curl or fresher-radar/0.1) on outgoing HTTP requests.
 Commit: pending
 Next time: Always specify a descriptive or standard User-Agent header for external API interactions.
+
+## 2026-11-17 16:22  CI editable pip install failed on flat-layout discovery
+Symptom: GitHub Actions CI failed during pip install -e ".[dev]" with error "Multiple top-level packages discovered in a flat-layout: ['db', 'config']".
+Root cause: pyproject.toml lacked explicit setuptools package discovery settings. Setuptools automatic discovery encountered multiple non-package directories at repository root and aborted.
+Fix: Added explicit [build-system] and [tool.setuptools.packages.find] to pyproject.toml, targeting pipeline packages and excluding non-package root directories.
+Commit: pending
+Next time: Explicitly configure package discovery in pyproject.toml when using a flat layout with non-code root directories.
