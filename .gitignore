@@ -1,2 +1,22 @@
-*.md
-/.private/
+# Environment and virtual environment
+.env
+.venv/
+
+# Private and agent directories
+.agents/
+.private/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Node and Next.js
+node_modules/
+.next/
+
+# Dev response cache
+cache/
+.cache/
+data/cache/

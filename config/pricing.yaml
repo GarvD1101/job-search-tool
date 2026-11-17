@@ -1,0 +1,66 @@
+# Groq model candidates, official list pricing, and free-tier rate limits
+# Last verified: 2026-11-17
+
+models:
+  openai/gpt-oss-20b:
+    provider: "groq"
+    model_id: "openai/gpt-oss-20b"
+    input_price_per_1m: 0.075
+    output_price_per_1m: 0.30
+    currency: "USD"
+    context_window: 131072
+    max_output_tokens: 65536
+    reasoning_effort: "low"
+    rate_limits:
+      requests_per_minute: 30
+      requests_per_day: 1000
+      tokens_per_minute: 8000
+      tokens_per_day: 200000
+      daily_token_budget_stop_pct: 0.80
+      daily_token_budget_stop_tokens: 160000
+    source_url: "https://groq.com/pricing/"
+    last_verified: "2026-11-17"
+
+  openai/gpt-oss-120b:
+    provider: "groq"
+    model_id: "openai/gpt-oss-120b"
+    input_price_per_1m: 0.15
+    output_price_per_1m: 0.60
+    currency: "USD"
+    context_window: 131072
+    max_output_tokens: 65536
+    reasoning_effort: "low"
+    rate_limits:
+      requests_per_minute: 30
+      requests_per_day: 1000
+      tokens_per_minute: 8000
+      tokens_per_day: 200000
+      daily_token_budget_stop_pct: 0.80
+      daily_token_budget_stop_tokens: 160000
+    source_url: "https://groq.com/pricing/"
+    last_verified: "2026-11-17"
+
+  qwen/qwen3.8-27b:
+    provider: "groq"
+    model_id: "qwen/qwen3.8-27b"
+    input_price_per_1m: 0.80
+    output_price_per_1m: 4.00
+    currency: "USD"
+    context_window: 131072
+    max_output_tokens: 16384
+    disable_thinking: true
+    rate_limits:
+      requests_per_minute: 30
+      requests_per_day: 1000
+      tokens_per_minute: 8000
+      tokens_per_day: 200000
+      daily_token_budget_stop_pct: 0.80
+      daily_token_budget_stop_tokens: 160000
+    source_url: "https://groq.com/pricing/"
+    last_verified: "2026-11-17"
+
+# Infrastructure limits
+infrastructure:
+  supabase_postgres_free:
+    storage_mb_cap: 500
+    egress_gb_cap: 5
