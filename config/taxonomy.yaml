@@ -1,0 +1,143 @@
+roles:
+  - software_dev
+  - data_analytics
+  - ml_ai
+  - it_devops_security
+  - qa_testing
+  - product_management
+  - design
+  - marketing
+  - sales_bd
+  - customer_support
+  - admin_back_office
+  - hr_recruitment
+  - finance_banking
+  - operations_logistics
+  - content_writing
+  - research
+  - teaching_education
+  - core_engineering
+  - healthcare
+  - legal_compliance
+  - hospitality_retail
+  - other
+
+cities:
+  - bengaluru
+  - hyderabad
+  - pune
+  - mumbai
+  - delhi_ncr
+  - chennai
+  - kolkata
+  - ahmedabad
+  - other_india
+  - remote
+  - unknown
+
+city_aliases:
+  bengaluru:
+    - bangalore
+    - bengaluru
+    - blr
+  hyderabad:
+    - hyderabad
+    - hyd
+    - secunderabad
+  pune:
+    - pune
+    - poona
+  mumbai:
+    - mumbai
+    - bombay
+    - navi mumbai
+    - thane
+    - kalyan
+  delhi_ncr:
+    - delhi
+    - new delhi
+    - gurgaon
+    - gurugram
+    - noida
+    - greater noida
+    - ghaziabad
+    - faridabad
+  chennai:
+    - chennai
+    - madras
+  kolkata:
+    - kolkata
+    - calcutta
+    - kolkatta
+  ahmedabad:
+    - ahmedabad
+    - amdavad
+    - gandhinagar
+  remote:
+    - remote
+    - work from home
+    - wfh
+    - anywhere
+
+other_india_cities:
+  - jaipur
+  - kochi
+  - cochin
+  - chandigarh
+  - indore
+  - coimbatore
+  - nagpur
+  - vadodara
+  - surat
+  - bhopal
+  - lucknow
+  - visakhapatnam
+  - vizag
+  - mysore
+  - mysuru
+  - trivandrum
+  - thiruvananthapuram
+  - patna
+  - bhubaneswar
+  - dehradun
+  - mohali
+  - panchkula
+  - ludhiana
+  - amritsar
+  - jalandhar
+  - nashik
+  - aurangabad
+  - rajkot
+  - varanasi
+  - agra
+  - kanpur
+  - meerut
+  - prayagraj
+  - allahabad
+  - ranchi
+  - jamshedpur
+  - guwahati
+  - mangalore
+  - mangaluru
+  - hubli
+  - belgaum
+  - calicut
+  - kozhikode
+  - thrissur
+  - madurai
+  - tiruchirappalli
+  - trichy
+  - salem
+  - tiruppur
+  - vijayawada
+  - guntur
+  - warangal
+  - raipur
+  - jabalpur
+  - gwalior
+  - udaipur
+  - jodhpur
+  - shimla
+  - jammu
+  - srinagar
+  - goa

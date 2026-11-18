@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS raw_posts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_raw_posts_fetched_at ON raw_posts (fetched_at);
-CREATE INDEX IF NOT EXISTS idx_raw_posts_source_id ON raw_posts (source, source_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_raw_posts_source_unique ON raw_posts (source, source_id);
 
 -- Canonical jobs table
 CREATE TABLE IF NOT EXISTS jobs (
@@ -33,21 +33,25 @@ CREATE TABLE IF NOT EXISTS jobs (
     description TEXT,
     url TEXT NOT NULL,
     source TEXT NOT NULL,
+    origin_site TEXT NOT NULL DEFAULT 'unknown',
     sources TEXT[] NOT NULL DEFAULT '{}',
     posted_at TIMESTAMPTZ,
     first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'needs_review', 'pending_tag')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'needs_review', 'pending_tag', 'rejected', 'duplicate')),
+    duplicate_of TEXT,
     post_type TEXT CHECK (post_type IS NULL OR post_type IN ('job', 'internship', 'trainee', 'fellowship', 'course_or_workshop', 'event', 'other')),
     is_fresher BOOLEAN,
     role TEXT CHECK (role IS NULL OR role IN (
-        'backend', 'frontend', 'fullstack', 'mobile', 'data_analyst', 'ml_ai',
-        'devops_cloud', 'qa', 'security', 'product', 'design', 'marketing',
-        'sales_bd', 'ops_support', 'finance', 'hr', 'content', 'other'
+        'software_dev', 'data_analytics', 'ml_ai', 'it_devops_security', 'qa_testing',
+        'product_management', 'design', 'marketing', 'sales_bd', 'customer_support',
+        'admin_back_office', 'hr_recruitment', 'finance_banking', 'operations_logistics',
+        'content_writing', 'research', 'teaching_education', 'core_engineering',
+        'healthcare', 'legal_compliance', 'hospitality_retail', 'other'
     )),
     city TEXT CHECK (city IS NULL OR city IN (
         'bengaluru', 'hyderabad', 'pune', 'mumbai', 'delhi_ncr',
-        'chennai', 'kolkata', 'ahmedabad', 'other_india', 'unknown'
+        'chennai', 'kolkata', 'ahmedabad', 'other_india', 'remote', 'unknown'
     )),
     is_remote BOOLEAN NOT NULL DEFAULT FALSE,
     multi_city BOOLEAN NOT NULL DEFAULT FALSE,
@@ -62,6 +66,25 @@ CREATE TABLE IF NOT EXISTS jobs (
         setweight(to_tsvector('english', coalesce(description, '')), 'C')
     ) STORED
 );
+
+-- Idempotent schema migrations for existing jobs table
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS origin_site TEXT NOT NULL DEFAULT 'unknown';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS duplicate_of TEXT;
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_status_check;
+ALTER TABLE jobs ADD CONSTRAINT jobs_status_check CHECK (status IN ('active', 'expired', 'needs_review', 'pending_tag', 'rejected', 'duplicate'));
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_role_check;
+ALTER TABLE jobs ADD CONSTRAINT jobs_role_check CHECK (role IS NULL OR role IN (
+    'software_dev', 'data_analytics', 'ml_ai', 'it_devops_security', 'qa_testing',
+    'product_management', 'design', 'marketing', 'sales_bd', 'customer_support',
+    'admin_back_office', 'hr_recruitment', 'finance_banking', 'operations_logistics',
+    'content_writing', 'research', 'teaching_education', 'core_engineering',
+    'healthcare', 'legal_compliance', 'hospitality_retail', 'other'
+));
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_city_check;
+ALTER TABLE jobs ADD CONSTRAINT jobs_city_check CHECK (city IS NULL OR city IN (
+    'bengaluru', 'hyderabad', 'pune', 'mumbai', 'delhi_ncr',
+    'chennai', 'kolkata', 'ahmedabad', 'other_india', 'remote', 'unknown'
+));
 
 CREATE INDEX IF NOT EXISTS idx_jobs_canonical_key ON jobs (canonical_key);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);
@@ -89,6 +112,15 @@ CREATE TABLE IF NOT EXISTS llm_calls (
 CREATE INDEX IF NOT EXISTS idx_llm_calls_run_id ON llm_calls (run_id);
 CREATE INDEX IF NOT EXISTS idx_llm_calls_created_at ON llm_calls (created_at DESC);
 
+-- Source API usage counter shared across local dev and GitHub Actions cron
+CREATE TABLE IF NOT EXISTS source_usage (
+    day DATE NOT NULL,
+    source TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, source, mode)
+);
+
 -- Enable Row Level Security on every table with no policies
 -- This prevents the public Data API from accessing the data.
 -- Direct connections using the database owner role bypass RLS.
@@ -96,4 +128,5 @@ ALTER TABLE runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE raw_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE llm_calls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE source_usage ENABLE ROW LEVEL SECURITY;
 

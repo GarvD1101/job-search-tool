@@ -1,0 +1,213 @@
+# Filter configuration for Phase 2 Fresher Job Filtering
+# All thresholds, keywords, and patterns are defined here for live adjustment.
+
+recency:
+  max_age_days: 45
+
+location:
+  known_non_india:
+    - "singapore"
+    - "united states"
+    - "usa"
+    - "united kingdom"
+    - "uk"
+    - "canada"
+    - "germany"
+    - "australia"
+    - "netherlands"
+    - "uae"
+    - "dubai"
+    - "ireland"
+    - "japan"
+    - "france"
+    - "philippines"
+    - "poland"
+    - "brazil"
+    - "spain"
+    - "italy"
+    - "switzerland"
+  india_keywords:
+    - "india"
+    - "bengaluru"
+    - "bangalore"
+    - "hyderabad"
+    - "pune"
+    - "mumbai"
+    - "delhi"
+    - "new delhi"
+    - "noida"
+    - "gurgaon"
+    - "gurugram"
+    - "chennai"
+    - "kolkata"
+    - "ahmedabad"
+    - "chandigarh"
+    - "jaipur"
+    - "kochi"
+    - "coimbatore"
+    - "indore"
+    - "bhopal"
+    - "surat"
+    - "lucknow"
+    - "nagpur"
+    - "vadodara"
+    - "thiruvananthapuram"
+    - "trivandrum"
+    - "kerala"
+    - "karnataka"
+    - "maharashtra"
+    - "tamil nadu"
+    - "telangana"
+    - "uttar pradesh"
+    - "haryana"
+    - "west bengal"
+    - "gujarat"
+  remote_india_patterns:
+    - "open to candidates in india"
+    - "remote in india"
+    - "remote, india"
+    - "remote - india"
+    - "remote (india)"
+    - "anywhere in india"
+    - "india - remote"
+
+hard_rejects:
+  seniority:
+    keywords:
+      - "senior"
+      - "sr"
+      - "lead"
+      - "principal"
+      - "staff"
+      - "architect"
+      - "manager"
+      - "head of"
+      - "director"
+      - "vp"
+      - "chief"
+      - "partner"
+      - "consultant"
+    exempt_entry_signals:
+      - "intern"
+      - "internship"
+      - "trainee"
+      - "graduate"
+      - "fresher"
+      - "freshers"
+      - "apprentice"
+      - "entry level"
+      - "entry-level"
+    sales_lead_exemptions:
+      - '\bleads?\s*(?:generation|gen|generator|qualification|qualifier|prospecting|nurturing)\b'
+
+  experience:
+    max_acceptable_years: 1
+    patterns:
+      - '(?P<min>\d+)\s*(?:-|to)\s*(?P<max>\d+)\s*(?:years?|yrs?)'
+      - '(?P<min>\d+)\s*\+\s*(?:years?|yrs?)'
+      - '(?:minimum|at\s+least)\s+(?P<min>\d+)\s*(?:years?|yrs?)'
+      - '(?P<min>\d+)\s*(?:years?|yrs?)\s*(?:of)?\s*experience'
+
+  not_a_job_post:
+    keywords:
+      - "fellowship"
+      - "scholarship"
+      - "bootcamp"
+      - "workshop"
+      - "webinar"
+      - "masterclass"
+      - "certification program"
+      - "apply for our program"
+      - "hackathon"
+      - "contest"
+    patterns:
+      - '\b(?:admissions?\s+open|apply\s+for\s+admission|direct\s+admission|taking\s+admissions?)\b'
+      - '\b(?:join\s+(?:our|the)\s+cohort|cohort\s+starts?|upcoming\s+cohort|next\s+cohort)\b'
+      - '\b(?:certification\s+course|training\s+course|crash\s+course|free\s+course|online\s+course|course\s+fee|course\s+duration|enrol(?:l)?\s+in\s+(?:this|our)?\s*course|data\s+science\s+course|full\s+stack\s+course)\b'
+    exempt_roles:
+      - "admission counsellor"
+      - "admission counselor"
+      - "admissions counsellor"
+      - "admissions counselor"
+      - "telecaller"
+      - "article trainee"
+      - "articleship"
+      - "customer success manager"
+      - "associate customer success"
+      - "associate ar"
+      - "marine engineer"
+    stipend_override_signals:
+      - "monthly stipend"
+      - "stipend"
+      - "salary"
+      - "full-time"
+      - "full time"
+      - "lpa"
+
+  pay_to_join:
+    keywords:
+      - "registration fee"
+      - "security deposit"
+      - "pay to join"
+      - "placement guarantee"
+      - "placement guaranteed"
+      - "job guarantee"
+      - "job guarantee course"
+      - "refundable fee"
+      - "course fee"
+      - "training fee"
+      - "enrollment fee"
+    patterns:
+      - 'fee\s*(?:of|is|:)?\s*(?:rs\.?|inr|₹)\s*\d+'
+    anti_fraud_disclaimers:
+      - "never charge"
+      - "do not charge"
+      - "does not charge"
+      - "will not ask for money"
+      - "will never ask for money"
+      - "will never ask you for money"
+      - "will not charge"
+      - "never ask for money"
+      - "not charge any fee"
+      - "fraud alert"
+      - "scam alert"
+
+positive_signals:
+  title_keywords:
+    - "intern"
+    - "internship"
+    - "fresher"
+    - "freshers"
+    - "trainee"
+    - "graduate trainee"
+    - "management trainee"
+    - "article trainee"
+    - "articleship"
+    - "apprentice"
+    - "apprenticeship"
+    - "sde-1"
+    - "sde 1"
+    - "sde1"
+    - "sde-i"
+    - "sde i"
+    - "junior engineer"
+    - "junior developer"
+    - "junior associate"
+    - "associate software engineer"
+    - "entry level"
+    - "entry-level"
+    - "batch pass"
+    - "passouts"
+    - "pass-outs"
+    - "pass out"
+    - "2024 batch"
+    - "2025 batch"
+    - "2026 batch"
+    - "2027 batch"
+  explicit_experience_patterns:
+    - '\b0\s*(?:-|to)\s*1\s*(?:years?|yrs?)\b'
+    - '\b0\s*(?:-|to)\s*2\s*(?:years?|yrs?)\b'
+    - '\b0\s*(?:years?|yrs?)\s*(?:of)?\s*experience\b'
+    - '\bno\s+experience\s*(?:required|needed)?\b'
+    - '\bfreshers?\s*(?:can\s+apply|eligible|welcome)\b'
+    - '\bzero\s+years?\s*(?:of)?\s*experience\b'

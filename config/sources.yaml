@@ -5,16 +5,18 @@ sources:
   jooble:
     enabled: true
     type: "api"
-    base_url: "https://jooble.org/api"
+    base_url: "https://in.jooble.org/api"
     daily_budget_total: 100
     daily_budget_cron: 60
     daily_budget_dev: 40
     usage_counter_file: "data/usage_counter.json"
+    cache_dir: "data/cache/jooble"
     user_agent: "fresher-radar/0.1 ({contact_email})"
     rate_limit:
       requests_per_minute: 10
       retry_backoff_factor: 2
       max_retries: 3
+      polite_delay_seconds: 0.5
     search_queries:
       terms:
         - "fresher"
@@ -23,7 +25,6 @@ sources:
         - "graduate trainee"
         - "entry level"
         - "campus hiring"
-        - "0-1 years"
       locations:
         - "India"
         - "Bengaluru"
@@ -37,7 +38,45 @@ sources:
   greenhouse:
     enabled: true
     type: "ats_board"
-    daily_budget_total: 50
+    base_url: "https://boards-api.greenhouse.io/v1/boards"
+    cache_dir: "data/cache/greenhouse"
     user_agent: "fresher-radar/0.1 ({contact_email})"
-    # List of Indian-hiring company tokens on Greenhouse will be populated in Phase 1
-    companies: []
+    rate_limit:
+      requests_per_minute: 30
+      retry_backoff_factor: 2
+      max_retries: 3
+      polite_delay_seconds: 0.2
+    # Verified company boards with confirmed India or India-open remote postings
+    companies:
+      - "druva"
+      - "slice"
+      - "deliveroo"
+      - "okta"
+      - "twilio"
+      - "inmobi"
+      - "groww"
+      - "elastic"
+      - "mongodb"
+      - "stripe"
+      - "affirm"
+      - "datadog"
+      - "intercom"
+      - "samsara"
+      - "rubrik"
+      - "gitlab"
+      - "coinbase"
+      - "dropbox"
+      - "pagerduty"
+      - "sumologic"
+      - "zscaler"
+      - "databricks"
+      - "gusto"
+      - "brex"
+      - "checkr"
+      - "grafanalabs"
+      - "instacart"
+      - "reddit"
+      - "roblox"
+      - "pinterest"
+      - "figma"
+      - "airtable"

@@ -1,0 +1,55 @@
+{
+  "jooble": {
+    "totalCount": 2,
+    "jobs": [
+      {
+        "id": 100001,
+        "title": "Software Engineer Trainee",
+        "location": "Bengaluru, India",
+        "snippet": "Entry level software engineering role for freshers.",
+        "salary": "Rs 4-6 LPA",
+        "source": "example.com",
+        "type": "Full-time",
+        "link": "https://example.com/job/100001",
+        "company": "Acme Tech India",
+        "updated": "2026-11-17T10:00:00"
+      },
+      {
+        "id": 100002,
+        "title": "Frontend Developer Intern",
+        "location": "Pune, India",
+        "snippet": "3 months internship for 2026 graduates.",
+        "salary": "Stipend Rs 25,000/month",
+        "source": "example.com",
+        "type": "Internship",
+        "link": "https://example.com/job/100002",
+        "company": "Beta Labs",
+        "updated": "2026-11-17T11:00:00"
+      }
+    ]
+  },
+  "greenhouse": {
+    "jobs": [
+      {
+        "id": 200001,
+        "title": "Graduate Systems Engineer",
+        "location": {
+          "name": "Bengaluru, Karnataka, India"
+        },
+        "content": "<p>Entry level systems engineering role for fresh graduates in Bengaluru.</p>",
+        "absolute_url": "https://boards.greenhouse.io/example/jobs/200001",
+        "updated_at": "2026-11-17T09:00:00Z"
+      },
+      {
+        "id": 200002,
+        "title": "Principal Architect",
+        "location": {
+          "name": "San Francisco, CA"
+        },
+        "content": "<p>10+ years experience required.</p>",
+        "absolute_url": "https://boards.greenhouse.io/example/jobs/200002",
+        "updated_at": "2026-11-17T09:30:00Z"
+      }
+    ]
+  }
+}
