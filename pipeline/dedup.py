@@ -18,6 +18,8 @@ class ProcessedJob:
     sources: list[str] = field(default_factory=list)
     duplicate_of: str | None = None
     city_or_remote: str = "unknown"
+    dedup_key: str | None = None
+
 
 
 COMPANY_SUFFIX_REGEX = re.compile(
@@ -224,6 +226,7 @@ class Deduplicator:
                 sources=sorted(sources_set),
                 duplicate_of=None,
                 city_or_remote=normalize_city(master_job.location_text),
+                dedup_key=key,
             )
             tier1_masters.append(master_processed)
             all_processed.append(master_processed)
@@ -247,6 +250,7 @@ class Deduplicator:
                         sources=[dup_job.source],
                         duplicate_of=key,
                         city_or_remote=dup_city_norm,
+                        dedup_key=key,
                     )
                 )
 

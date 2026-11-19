@@ -21,10 +21,13 @@ from pipeline.sources.jooble import JoobleAdapter
 from pipeline.store import (
     finish_pipeline_run,
     load_raw_posts,
+    resolve_run_trigger,
+    run_expire_and_prune,
     save_jobs,
     save_raw_posts,
     start_pipeline_run,
 )
+from scripts.check_invariants import check_invariants
 
 logging.basicConfig(
     level=logging.INFO,
@@ -79,15 +82,16 @@ def run_fetch_stage(
     mode: str = "dev",
     cache_mode: str = "read-through",
     use_cache: bool | None = None,
-    trigger: str = "manual",
+    trigger: str | None = None,
     queries_override: list[tuple[str, str]] | None = None,
     companies_override: list[str] | None = None,
 ) -> tuple[int, str, dict[str, Any]]:
     if use_cache is not None:
         cache_mode = "cache-only" if use_cache else "bypass"
 
+    actual_trigger = resolve_run_trigger() if trigger is None else trigger
     start_time = time.time()
-    run_id = start_pipeline_run(trigger=trigger)
+    run_id = start_pipeline_run(trigger=actual_trigger)
 
     all_posts: list[RawPost] = []
     source_counts: dict[str, int] = {}
@@ -148,7 +152,7 @@ def run_fetch_stage(
     stats = {
         "stage": "fetch",
         "mode": mode,
-        "trigger": trigger,
+        "trigger": actual_trigger,
         "duration_seconds": duration,
         "source_counts": source_counts,
         "query_counts": query_counts,
@@ -277,13 +281,14 @@ def print_filter_summary(stats: dict[str, Any]) -> None:
 def run_filter_stage(
     filter_engine: FilterRuleEngine | None = None,
     deduplicator: Deduplicator | None = None,
-    trigger: str = "manual",
+    trigger: str | None = None,
     export_sample: bool = True,
     sample_size: int = 50,
     seed: int = 42,
 ) -> tuple[int, str, dict[str, Any]]:
+    actual_trigger = resolve_run_trigger() if trigger is None else trigger
     start_time = time.time()
-    run_id = start_pipeline_run(trigger=trigger)
+    run_id = start_pipeline_run(trigger=actual_trigger)
 
     engine = filter_engine or FilterRuleEngine()
     dedup = deduplicator or Deduplicator()
@@ -429,6 +434,7 @@ def run_filter_stage(
                     sources=[norm.source],
                     duplicate_of=None,
                     city_or_remote=normalize_city(norm.location_text),
+                    dedup_key=rej_key,
                 )
             )
 
@@ -445,6 +451,22 @@ def run_filter_stage(
         dedup_stats["tier1_duplicates"] + dedup_stats["tier2_duplicates"],
         len(rejects),
     )
+
+    # 4b. Expire and prune step
+    expire_counts = run_expire_and_prune()
+    logger.info(
+        "Expire step: %d expired, %d untagged rejected, %d raw posts pruned",
+        expire_counts.get("expired", 0),
+        expire_counts.get("untagged_rejected", 0),
+        expire_counts.get("pruned_raw", 0),
+    )
+
+    # 4c. Invariants check
+    invariants_passed, invariants_stats = check_invariants()
+    if not invariants_passed:
+        logger.warning("Database invariants check failed: %s", invariants_stats.get("violations"))
+    else:
+        logger.info("Database invariants verified: all passed.")
 
     # 5. Export eval/sample_50.csv from survivor masters (status == 'pending_tag')
     survivor_masters = [
@@ -511,6 +533,7 @@ def run_filter_stage(
     duration = round(time.time() - start_time, 2)
     stats = {
         "stage": "filter",
+        "trigger": actual_trigger,
         "duration_seconds": duration,
         "total_raw_posts": len(raw_posts),
         "total_jobs_persisted": saved_count,
@@ -532,10 +555,13 @@ def run_filter_stage(
         "samples_by_decision": samples_by_decision,
         "accepted_samples": accepted_sample_selection,
         "suspicious_non_rejected": suspicious_non_rejected,
+        "expire_counts": expire_counts,
+        "invariants": invariants_stats,
     }
 
-    finish_pipeline_run(run_id, status="success", stats=stats)
-    return run_id or 0, "success", stats
+    run_status = "success" if invariants_passed else "partial"
+    finish_pipeline_run(run_id, status=run_status, stats=stats)
+    return run_id or 0, run_status, stats
 
 
 def main() -> int:
@@ -556,6 +582,12 @@ def main() -> int:
         type=int,
         default=None,
         help="Maximum number of jobs to tag",
+    )
+    parser.add_argument(
+        "--max-minutes",
+        type=float,
+        default=25.0,
+        help="Maximum minutes for tag stage before halting (default: 25.0)",
     )
     parser.add_argument(
         "--ids-file",
@@ -608,11 +640,6 @@ def main() -> int:
         help="Comma-separated company tokens (e.g. 'okta,twilio')",
     )
     parser.add_argument(
-        "--trigger",
-        default="manual",
-        help="Run trigger identifier (manual, cron, dispatch)",
-    )
-    parser.add_argument(
         "--config",
         default="config/sources.yaml",
         help="Path to sources.yaml",
@@ -646,7 +673,7 @@ def main() -> int:
         cache_mode = "cache-only" if args.use_cache else "bypass"
 
     if args.stage == "filter":
-        _, status, stats = run_filter_stage(trigger=args.trigger)
+        _, status, stats = run_filter_stage()
         print_filter_summary(stats)
         return 0 if status in ("success", "partial") else 1
 
@@ -691,7 +718,10 @@ def main() -> int:
             print("=" * 60 + "\n")
             return 0
 
-        prod_stats = manager.run_production_mode(limit=args.limit)
+        prod_stats = manager.run_production_mode(
+            limit=args.limit,
+            max_minutes=args.max_minutes,
+        )
         tok = prod_stats.get("tokens_used", {})
         db = prod_stats.get("db_stats", {})
         print("\n" + "=" * 60)
@@ -732,7 +762,6 @@ def main() -> int:
         adapters=adapters,
         mode=args.mode,
         cache_mode=cache_mode,
-        trigger=args.trigger,
         queries_override=queries_override,
         companies_override=companies_override,
     )

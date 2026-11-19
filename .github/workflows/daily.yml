@@ -19,7 +19,9 @@ jobs:
   refresh:
     name: Fetch and Filter Jobs
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    permissions:
+      contents: read
 
     env:
       JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
@@ -42,16 +44,18 @@ jobs:
 
       - name: Run Fetch Stage
         run: |
-          TRIGGER="${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}"
           SOURCES="${{ github.event.inputs.sources || 'jooble,greenhouse' }}"
-          python -m pipeline.run --stage fetch --mode cron --sources "$SOURCES" --trigger "$TRIGGER"
+          python -m pipeline.run --stage fetch --mode cron --sources "$SOURCES"
 
       - name: Run Filter Stage
+        if: ${{ !cancelled() }}
         run: |
-          TRIGGER="${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}"
-          python -m pipeline.run --stage filter --trigger "$TRIGGER"
+          python -m pipeline.run --stage filter
 
       - name: Run Tag Stage
+        if: ${{ !cancelled() }}
         run: |
-          python -m pipeline.run --stage tag --model "${TAG_MODEL:-openai/gpt-oss-20b}"
+          python -m pipeline.run --stage tag --model "${TAG_MODEL:-openai/gpt-oss-20b}" --max-minutes 25
+
+
 

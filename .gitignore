@@ -1,5 +1,6 @@
 # Environment and virtual environment
 .env
+.env*.local
 .venv/
 
 # Private and agent directories

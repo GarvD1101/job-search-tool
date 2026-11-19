@@ -26,13 +26,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_raw_posts_source_unique ON raw_posts (sour
 -- Canonical jobs table
 CREATE TABLE IF NOT EXISTS jobs (
     id BIGSERIAL PRIMARY KEY,
-    canonical_key TEXT UNIQUE NOT NULL,
+    source TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    dedup_key TEXT,
+    canonical_key TEXT NOT NULL,
     title TEXT NOT NULL,
     company TEXT NOT NULL,
     location_text TEXT NOT NULL DEFAULT '',
     description TEXT,
     url TEXT NOT NULL,
-    source TEXT NOT NULL,
     origin_site TEXT NOT NULL DEFAULT 'unknown',
     sources TEXT[] NOT NULL DEFAULT '{}',
     posted_at TIMESTAMPTZ,
@@ -40,6 +42,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'needs_review', 'pending_tag', 'rejected', 'duplicate')),
     duplicate_of TEXT,
+    CONSTRAINT jobs_source_source_id_key UNIQUE (source, source_id),
+
     post_type TEXT CHECK (post_type IS NULL OR post_type IN ('job', 'internship', 'trainee', 'fellowship', 'course_or_workshop', 'event', 'other')),
     is_fresher BOOLEAN,
     role TEXT CHECK (role IS NULL OR role IN (
@@ -91,6 +95,7 @@ ALTER TABLE jobs ADD CONSTRAINT jobs_post_type_check CHECK (post_type IS NULL OR
 ));
 
 CREATE INDEX IF NOT EXISTS idx_jobs_canonical_key ON jobs (canonical_key);
+CREATE INDEX IF NOT EXISTS idx_jobs_dedup_key ON jobs (dedup_key);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);
 CREATE INDEX IF NOT EXISTS idx_jobs_role ON jobs (role);
 CREATE INDEX IF NOT EXISTS idx_jobs_city ON jobs (city);

@@ -40,13 +40,15 @@ class InMemoryDB:
 
             CREATE TABLE jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                canonical_key TEXT UNIQUE NOT NULL,
+                source TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                dedup_key TEXT,
+                canonical_key TEXT NOT NULL,
                 title TEXT NOT NULL,
                 company TEXT NOT NULL,
                 location_text TEXT NOT NULL DEFAULT '',
                 description TEXT,
                 url TEXT NOT NULL,
-                source TEXT NOT NULL,
                 origin_site TEXT NOT NULL DEFAULT 'unknown',
                 sources TEXT NOT NULL DEFAULT '[]',
                 status TEXT NOT NULL DEFAULT 'pending_tag',
@@ -60,7 +62,8 @@ class InMemoryDB:
                 rule_reason TEXT,
                 tag_source TEXT,
                 tagger_model TEXT,
-                prompt_version TEXT
+                prompt_version TEXT,
+                UNIQUE (source, source_id)
             );
             """
         )
@@ -69,17 +72,19 @@ class InMemoryDB:
         """Upsert jobs using the exact logic from pipeline/store.py save_jobs."""
         sql = """
         INSERT INTO jobs (
-            canonical_key, title, company, location_text, description, url,
-            source, origin_site, sources, status, duplicate_of,
-            rule_decision, rule_reason, tag_source
+            source, source_id, dedup_key, canonical_key, title, company,
+            location_text, description, url, origin_site, sources, status,
+            duplicate_of, rule_decision, rule_reason, tag_source
         )
         VALUES (
-            :canonical_key, :title, :company, :location_text, :description, :url,
-            :source, :origin_site, :sources, :status, :duplicate_of,
-            :rule_decision, :rule_reason, 'rule'
+            :source, :source_id, :dedup_key, :canonical_key, :title, :company,
+            :location_text, :description, :url, :origin_site, :sources, :status,
+            :duplicate_of, :rule_decision, :rule_reason, 'rule'
         )
-        ON CONFLICT (canonical_key)
+        ON CONFLICT (source, source_id)
         DO UPDATE SET
+            dedup_key = EXCLUDED.dedup_key,
+            canonical_key = EXCLUDED.canonical_key,
             title = EXCLUDED.title,
             company = EXCLUDED.company,
             location_text = EXCLUDED.location_text,
@@ -101,13 +106,15 @@ class InMemoryDB:
         """
         for pj in processed_jobs:
             params = {
+                "source": pj.job.source,
+                "source_id": str(pj.job.source_id),
+                "dedup_key": getattr(pj, "dedup_key", None) or pj.canonical_key,
                 "canonical_key": pj.canonical_key,
                 "title": pj.job.title,
                 "company": pj.job.company,
                 "location_text": pj.job.location_text,
                 "description": pj.job.description,
                 "url": pj.job.url,
-                "source": pj.job.source,
                 "origin_site": pj.job.origin_site,
                 "sources": str(pj.sources or [pj.job.source]),
                 "status": pj.status,

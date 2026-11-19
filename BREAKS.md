@@ -107,3 +107,18 @@ Fix: Updated jobs_post_type_check in db/schema.sql to allow all seven taxonomy p
 Commit: pending
 Next time: Align database schema check constraints directly with the application enums from day one.
 
+## 2026-11-19 13:00  Job Identity Divergence on Lifecycle Transitions
+Symptom: 8 extra rows in jobs table (1,489 rows vs 1,481 raw_posts) when stale posts were re-evaluated.
+Root cause: jobs table used canonical_key as the unique constraint. Survivors used sha1(company|title|city) while rejects used sha1(rej|source|source_id). When an accepted post crossed 45 days and was re-evaluated as stale, the upsert generated a new rej|... key and inserted a duplicate row rather than updating the existing row in place.
+Fix: Migrated jobs identity to UNIQUE (source, source_id). Re-routed dedup grouping to a non-unique dedup_key column. Deduplicated existing records while preserving all 440 tagged rows. Added invariant enforcement script check_invariants.py.
+Commit: pending
+Next time: Anchor entity identity to the source record identifier rather than volatile evaluation-dependent hashes.
+
+## 2026-11-19 18:35  Next.js Build-Time Type Error on Duplicate Property Identifier
+Symptom: next build failed with Type error: Duplicate identifier 'source' in src/lib/types.ts.
+Root cause: When adding source and source_id to the Job interface, source was already declared further down in the interface.
+Fix: Removed the duplicate source: string declaration from Job in web/src/lib/types.ts.
+Commit: pending
+Next time: Run tsc --noEmit before triggering full production builds.
+
+

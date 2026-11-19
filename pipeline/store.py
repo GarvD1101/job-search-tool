@@ -61,20 +61,49 @@ def save_raw_posts(posts: list[RawPost], db_url: str | None = None) -> int:
         raise RuntimeError(f"Database raw_posts insertion failed: {safe_msg}") from None
 
 
-def start_pipeline_run(trigger: str = "manual", db_url: str | None = None) -> int | None:
+def resolve_run_trigger() -> str:
+    """Derive run trigger from GITHUB_EVENT_NAME or default to manual."""
+    event_name = (os.getenv("GITHUB_EVENT_NAME") or "").strip().lower()
+    if event_name in ("schedule", "workflow_dispatch"):
+        return event_name
+    return "manual"
+
+
+def get_github_run_metadata() -> dict[str, str | None]:
+    """Extract GitHub Actions run metadata from environment variables."""
+    return {
+        "run_id": os.getenv("GITHUB_RUN_ID"),
+        "event_name": os.getenv("GITHUB_EVENT_NAME"),
+        "server_url": os.getenv("GITHUB_SERVER_URL"),
+    }
+
+
+def start_pipeline_run(
+    trigger: str | None = None,
+    db_url: str | None = None,
+) -> int | None:
     target_url = db_url or get_db_url()
     if not target_url:
         return None
 
+    actual_trigger = resolve_run_trigger() if trigger is None else trigger
+    gh_meta = get_github_run_metadata()
+    initial_stats: dict[str, Any] = {}
+    if any(gh_meta.values()):
+        initial_stats["github"] = gh_meta
+
     insert_sql = """
     INSERT INTO runs (trigger, started_at, status, stats)
-    VALUES (%s, %s, 'running', '{}'::jsonb)
+    VALUES (%s, %s, 'running', %s::jsonb)
     RETURNING id;
     """
     try:
         with psycopg.connect(target_url, autocommit=True) as conn:
             with conn.cursor() as cur:
-                cur.execute(insert_sql, (trigger, datetime.now(timezone.utc)))
+                cur.execute(
+                    insert_sql,
+                    (actual_trigger, datetime.now(timezone.utc), Jsonb(initial_stats)),
+                )
                 row = cur.fetchone()
                 return int(row[0]) if row else None
     except Exception as exc:
@@ -94,6 +123,13 @@ def finish_pipeline_run(
     target_url = db_url or get_db_url()
     if not target_url:
         return
+
+    gh_meta = get_github_run_metadata()
+    if any(gh_meta.values()):
+        stats.setdefault("github", gh_meta)
+        stats["github_run_id"] = gh_meta.get("run_id")
+        stats["github_event_name"] = gh_meta.get("event_name")
+        stats["github_server_url"] = gh_meta.get("server_url")
 
     update_sql = """
     UPDATE runs
@@ -153,17 +189,21 @@ def save_jobs(jobs_to_save: list[Any], db_url: str | None = None) -> int:
 
     upsert_sql = """
     INSERT INTO jobs (
-        canonical_key, title, company, location_text, description, url,
-        source, origin_site, sources, posted_at, status, duplicate_of,
-        rule_decision, rule_reason, tag_source, first_seen_at, last_seen_at
+        source, source_id, dedup_key, canonical_key, title, company,
+        location_text, description, url, origin_site, sources, posted_at,
+        status, duplicate_of, rule_decision, rule_reason, tag_source,
+        first_seen_at, last_seen_at
     )
     VALUES (
         %s, %s, %s, %s, %s, %s,
         %s, %s, %s, %s, %s, %s,
-        %s, %s, 'rule', NOW(), NOW()
+        %s, %s, %s, %s, 'rule',
+        NOW(), NOW()
     )
-    ON CONFLICT (canonical_key)
+    ON CONFLICT (source, source_id)
     DO UPDATE SET
+        dedup_key = EXCLUDED.dedup_key,
+        canonical_key = EXCLUDED.canonical_key,
         title = EXCLUDED.title,
         company = EXCLUDED.company,
         location_text = EXCLUDED.location_text,
@@ -187,13 +227,15 @@ def save_jobs(jobs_to_save: list[Any], db_url: str | None = None) -> int:
     """
     records = [
         (
+            pj.job.source,
+            str(pj.job.source_id),
+            getattr(pj, "dedup_key", None) or pj.canonical_key,
             pj.canonical_key,
             pj.job.title,
             pj.job.company,
             pj.job.location_text,
             pj.job.description,
             pj.job.url,
-            pj.job.source,
             pj.job.origin_site,
             pj.sources or [pj.job.source],
             pj.job.posted_at,
@@ -215,6 +257,57 @@ def save_jobs(jobs_to_save: list[Any], db_url: str | None = None) -> int:
             safe_msg = "Database connection error (credentials masked)"
         logger.error("Failed saving jobs to database: %s", safe_msg)
         raise RuntimeError(f"Database jobs insertion failed: {safe_msg}") from None
+
+
+def run_expire_and_prune(db_url: str | None = None) -> dict[str, int]:
+    """Expire jobs unseen for 14 days or posted >45 days ago.
+
+    Also prunes raw_posts older than 7 days.
+    """
+    target_url = db_url or get_db_url()
+    if not target_url:
+        return {"expired": 0, "untagged_rejected": 0, "pruned_raw": 0}
+
+    counts = {"expired": 0, "untagged_rejected": 0, "pruned_raw": 0}
+    try:
+        with psycopg.connect(target_url, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                # 1. Expire active/pending_tag jobs older than 14d or posted >45d
+                cur.execute("""
+                    UPDATE jobs
+                    SET status = 'expired'
+                    WHERE status IN ('active', 'pending_tag')
+                      AND (
+                        last_seen_at < NOW() - INTERVAL '14 days'
+                        OR posted_at < NOW() - INTERVAL '45 days'
+                      );
+                """)
+                counts["expired"] = cur.rowcount
+
+                # 2. Untagged rows that fail rules become rejected
+                cur.execute("""
+                    UPDATE jobs
+                    SET status = 'rejected'
+                    WHERE (tag_source IS NULL OR tag_source = 'rule')
+                      AND rule_decision = 'reject'
+                      AND status = 'pending_tag';
+                """)
+                counts["untagged_rejected"] = cur.rowcount
+
+                # 3. Prune raw_posts older than 7 days
+                cur.execute("""
+                    DELETE FROM raw_posts
+                    WHERE fetched_at < NOW() - INTERVAL '7 days';
+                """)
+                counts["pruned_raw"] = cur.rowcount
+    except Exception as exc:
+        safe_msg = str(exc)
+        if "@" in safe_msg:
+            safe_msg = "Database connection error (credentials masked)"
+        logger.error("Failed running expire and prune step: %s", safe_msg)
+
+    return counts
+
 
 
 def record_llm_call(
