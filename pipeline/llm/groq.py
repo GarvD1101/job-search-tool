@@ -8,7 +8,14 @@ from typing import Any
 import httpx
 from pydantic import ValidationError
 
-from pipeline.llm.base import BaseLLMProvider, TagResult, Usage
+from pipeline.llm.base import (
+    BaseLLMProvider,
+    City,
+    PostType,
+    Role,
+    TagResult,
+    Usage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -194,18 +201,21 @@ class GroqProvider(BaseLLMProvider):
             logger.warning(
                 "Initial JSON validation failed: %s. Initiating one repair retry.", parse_err
             )
-            # Attempt one repair retry
+            # Attempt one repair retry restating the allowed enum lists
+            allowed_roles = ", ".join([r.value for r in Role])
+            allowed_cities = ", ".join([c.value for c in City])
+            allowed_post_types = ", ".join([p.value for p in PostType])
+            repair_prompt = (
+                f"Your output failed validation: {parse_err}\n"
+                "You must use ONLY the following allowed enum values:\n"
+                f"- role: {allowed_roles}\n"
+                f"- city: {allowed_cities}\n"
+                f"- post_type: {allowed_post_types}\n"
+                "Return ONLY valid JSON matching the exact schema with key 'results'."
+            )
             repair_messages = list(messages)
             repair_messages.append({"role": "assistant", "content": raw_content})
-            repair_messages.append(
-                {
-                    "role": "user",
-                    "content": (
-                        f"Your output failed validation: {parse_err}\n"
-                        "Return ONLY valid JSON matching the exact schema with key 'results'."
-                    ),
-                }
-            )
+            repair_messages.append({"role": "user", "content": repair_prompt})
             repair_data, repair_lat = self._call_api_with_retry(repair_messages)
             latency_ms += repair_lat
 

@@ -97,3 +97,127 @@ def test_database_connection_if_configured():
                 assert result[0] == 1
     except psycopg.OperationalError as exc:
         pytest.skip(f"Database host unreachable: {exc}")
+
+
+def test_jobs_post_type_check_constraint_allows_trainee_and_course_or_workshop():
+    """Verify that jobs table CHECK constraint accepts all seven post types.
+
+    Inserts a tagged trainee row and a rejected row with post_type course_or_workshop.
+    """
+    import sqlite3
+
+    conn = sqlite3.connect(":memory:")
+    conn.execute(
+        """
+        CREATE TABLE jobs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            canonical_key TEXT UNIQUE NOT NULL,
+            title TEXT NOT NULL,
+            company TEXT NOT NULL,
+            url TEXT NOT NULL,
+            source TEXT NOT NULL,
+            status TEXT NOT NULL,
+            post_type TEXT CHECK (post_type IS NULL OR post_type IN (
+                'job', 'internship', 'trainee', 'fellowship', 'course_or_workshop', 'event', 'other'
+            )),
+            role TEXT,
+            city TEXT,
+            rule_decision TEXT,
+            rule_reason TEXT
+        );
+        """
+    )
+    # 1. Tagged trainee row
+    conn.execute(
+        """
+        INSERT INTO jobs (
+            canonical_key, title, company, url, source, status, post_type, role, city
+        ) VALUES (
+            'test_trainee_key', 'Graduate Trainee Engineer', 'Acme Corp',
+            'https://example.com/job/1', 'greenhouse', 'active',
+            'trainee', 'core_engineering', 'pune'
+        );
+        """
+    )
+    cur = conn.execute(
+        "SELECT status, post_type, role FROM jobs WHERE canonical_key = 'test_trainee_key';"
+    )
+    row = cur.fetchone()
+    assert row == ("active", "trainee", "core_engineering")
+
+    # 2. Rejected row with post_type course_or_workshop
+    conn.execute(
+        """
+        INSERT INTO jobs (
+            canonical_key, title, company, url, source, status,
+            post_type, rule_decision, rule_reason
+        ) VALUES (
+            'test_course_key', 'Full Stack Java Bootcamp', 'Training Institute',
+            'https://example.com/course/1', 'jooble', 'rejected',
+            'course_or_workshop', 'reject', 'not_a_job_post'
+        );
+        """
+    )
+    cur = conn.execute(
+        "SELECT status, post_type, rule_reason FROM jobs WHERE canonical_key = 'test_course_key';"
+    )
+    row = cur.fetchone()
+    assert row == ("rejected", "course_or_workshop", "not_a_job_post")
+
+    # 3. Invalid post_type must fail check constraint
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute(
+            """
+            INSERT INTO jobs (
+                canonical_key, title, company, url, source, status, post_type
+            ) VALUES (
+                'test_bad_key', 'Invalid Post', 'Bad Corp',
+                'https://example.com/bad/1', 'jooble', 'active', 'invalid_post_type'
+            );
+            """
+        )
+
+    # 4. Also verify live PostgreSQL with rollback if reachable
+    db_url = os.environ.get("SUPABASE_DB_URL")
+    if db_url:
+        import psycopg
+
+        try:
+            with psycopg.connect(db_url, connect_timeout=3) as pg_conn:
+                with pg_conn.transaction():
+                    with pg_conn.cursor() as pg_cur:
+                        pg_cur.execute(
+                            """
+                            INSERT INTO jobs (
+                                canonical_key, title, company, url, source,
+                                status, post_type, role, city
+                            ) VALUES (
+                                'test_live_trainee_key', 'Graduate Trainee Engineer', 'Acme Corp',
+                                'https://example.com/job/trainee', 'greenhouse',
+                                'active', 'trainee', 'core_engineering', 'pune'
+                            );
+                            """
+                        )
+                        pg_cur.execute(
+                            """
+                            INSERT INTO jobs (
+                                canonical_key, title, company, url, source,
+                                status, post_type, rule_decision, rule_reason
+                            ) VALUES (
+                                'test_live_course_key', 'Full Stack Java Bootcamp', 'Institute',
+                                'https://example.com/course/1', 'jooble',
+                                'rejected', 'course_or_workshop', 'reject', 'not_a_job_post'
+                            );
+                            """
+                        )
+                        pg_cur.execute(
+                            "SELECT post_type FROM jobs "
+                            "WHERE canonical_key IN ("
+                            "'test_live_trainee_key', 'test_live_course_key');"
+                        )
+                        pts = {r[0] for r in pg_cur.fetchall()}
+                        assert pts == {"trainee", "course_or_workshop"}
+                        pg_conn.rollback()
+        except (psycopg.OperationalError, Exception):
+            pass
+

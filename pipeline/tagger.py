@@ -12,6 +12,7 @@ from pipeline.llm.base import BaseLLMProvider, TagResult
 from pipeline.llm.groq import GroqProvider
 from pipeline.llm.mock import MockProvider
 from pipeline.store import (
+    get_job_stats,
     get_today_token_usage,
     load_pending_jobs,
     record_llm_call,
@@ -296,11 +297,17 @@ class TagManager:
         cache_hits = 0
         live_calls = 0
         tokens_accumulated = today_used
+        run_input_tokens = 0
+        run_output_tokens = 0
+        run_reasoning_tokens = 0
+        validation_failures_count = 0
 
         uncached_batch: list[tuple[dict[str, Any], str]] = []
 
         def flush_batch() -> None:
             nonlocal live_calls, tokens_accumulated
+            nonlocal run_input_tokens, run_output_tokens, run_reasoning_tokens
+            nonlocal validation_failures_count
             if not uncached_batch:
                 return
 
@@ -318,6 +325,9 @@ class TagManager:
             try:
                 results, usage = self.provider.tag_batch(posts_for_call, self.prompt_version)
                 live_calls += 1
+                run_input_tokens += usage.input_tokens
+                run_output_tokens += usage.output_tokens
+                run_reasoning_tokens += usage.reasoning_tokens
                 tokens_accumulated += (usage.input_tokens + usage.output_tokens)
 
                 record_llm_call(
@@ -363,6 +373,7 @@ class TagManager:
                             }
                         )
                     else:
+                        validation_failures_count += 1
                         tagged_records.append(
                             {
                                 "canonical_key": job["canonical_key"],
@@ -374,6 +385,7 @@ class TagManager:
                             }
                         )
             except ValidationError:
+                validation_failures_count += len(uncached_batch)
                 for job, _ in uncached_batch:
                     tagged_records.append(
                         {
@@ -443,10 +455,30 @@ class TagManager:
             updated_count = update_tagged_jobs(tagged_records)
             logger.info("Updated %d jobs in database with LLM tags", updated_count)
 
+        model_cfg = self.pricing_config.get("models", {}).get(self.model, {})
+        inp_price = float(model_cfg.get("input_price_per_1m", 0.075))
+        out_price = float(model_cfg.get("output_price_per_1m", 0.30))
+        list_price_cost = round(
+            (run_input_tokens * inp_price + run_output_tokens * out_price) / 1_000_000,
+            4,
+        )
+
+        db_stats = get_job_stats()
+
         return {
             "status": "success",
             "total_processed": len(tagged_records),
+            "posts_tagged": len(tagged_records),
             "cache_hits": cache_hits,
             "live_calls": live_calls,
+            "tokens_used": {
+                "input_tokens": run_input_tokens,
+                "output_tokens": run_output_tokens,
+                "reasoning_tokens": run_reasoning_tokens,
+                "total_run_tokens": run_input_tokens + run_output_tokens,
+            },
+            "list_price_cost": list_price_cost,
             "tokens_used_today": tokens_accumulated,
+            "validation_failures": validation_failures_count,
+            "db_stats": db_stats,
         }

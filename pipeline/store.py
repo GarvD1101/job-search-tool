@@ -368,3 +368,52 @@ def update_tagged_jobs(tagged_records: list[dict[str, Any]], db_url: str | None 
     except Exception as exc:
         logger.error("Failed updating tagged jobs: %s", exc)
         raise
+
+
+def get_job_stats(db_url: str | None = None) -> dict[str, Any]:
+    """Query current jobs status, reject reasons, and tagged role/city distributions."""
+    target_url = db_url or get_db_url()
+    if not target_url:
+        return {}
+
+    stats: dict[str, Any] = {
+        "status_counts": {},
+        "rejected_reasons": {},
+        "role_distribution": {},
+        "city_distribution": {},
+        "total_jobs": 0,
+    }
+    try:
+        with psycopg.connect(target_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT status, count(*) FROM jobs GROUP BY status;")
+                for s, c in cur.fetchall():
+                    stats["status_counts"][s] = c
+                    stats["total_jobs"] += c
+
+                cur.execute(
+                    "SELECT COALESCE(rule_reason, 'unknown'), count(*) "
+                    "FROM jobs WHERE status = 'rejected' "
+                    "GROUP BY rule_reason ORDER BY count(*) DESC;"
+                )
+                for r, c in cur.fetchall():
+                    stats["rejected_reasons"][r] = c
+
+                cur.execute(
+                    "SELECT role, count(*) FROM jobs "
+                    "WHERE role IS NOT NULL GROUP BY role ORDER BY count(*) DESC;"
+                )
+                for r, c in cur.fetchall():
+                    stats["role_distribution"][r] = c
+
+                cur.execute(
+                    "SELECT city, count(*) FROM jobs "
+                    "WHERE city IS NOT NULL GROUP BY city ORDER BY count(*) DESC;"
+                )
+                for city, c in cur.fetchall():
+                    stats["city_distribution"][city] = c
+    except Exception as exc:
+        logger.warning("Could not fetch job stats from database: %s", exc)
+
+    return stats
+

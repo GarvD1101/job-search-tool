@@ -1,0 +1,34 @@
+============================================================
+BENCHMARK EVALUATION REPORT: openai/gpt-oss-120b
+============================================================
+Headline Strict Metrics:
+  Role Excluded Row: ['36'] (dropped from role only)
+  Total Evaluated:   50
+  Role Accuracy:     73.5% (36/49, n=49)
+  City Accuracy:     90.0% (45/50, n=50)
+  Unsure Excluded:   2 rows dropped from fresher metrics
+  Fresher Agree:     95.8% (46/48, n=48) [Yes/No rows only]
+  No-Class Prec:     75.0% (n=4)
+  No-Class Recall:   75.0% (n=4)
+
+Secondary Metrics:
+  Role Acc (excl 'other'): 80.0% (36/45, n=45) [excluded row(s): ['3', '14', '18', '47']]
+  Role-Family Accuracy:    81.6% (40/49, n=49)
+
+Error Counts (Secondary):
+  - Wrong City:            5
+  - False Accept (FN):     1 (model fresher True where human No)
+  - False Reject (FP):     1 (model fresher False where human Yes)
+  - Invalid Enum Values:   0
+
+Top 5 Role Confusion Pairs (Human -> Model):
+  - other -> admin_back_office: 2
+  - other -> it_devops_security: 1
+  - customer_support -> operations_logistics: 1
+  - customer_support -> it_devops_security: 1
+  - operations_logistics -> admin_back_office: 1
+
+Disagreements:   17 rows
+Saved CSV:       docs\results\disagreements_gpt-oss-120b_v3.csv
+Saved HTML:      docs\results\disagreements_gpt-oss-120b_v3.html
+============================================================

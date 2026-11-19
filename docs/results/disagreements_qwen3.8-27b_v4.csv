@@ -1,0 +1,19 @@
+row #,title,my role,model role,my city,model city,my fresher label,model is_fresher
+3,Cybersecurity Intern,other,it_devops_security,hyderabad,hyderabad,Yes,True
+5,Fast Track Operations Specialist 2,customer_support,operations_logistics,remote,remote,No,False
+9,Junior Software Engineer (React) (work from home),software_dev,software_dev,pune,remote,Yes,True
+13,Service Desk Specialist,customer_support,it_devops_security,hyderabad,hyderabad,No,False
+14,Data Entry Operator,other,admin_back_office,hyderabad,hyderabad,Yes,True
+18,Data Entry Operator,other,admin_back_office,other_india,other_india,Yes,True
+19,Head Campus Administration,operations_logistics,admin_back_office,pune,pune,Unsure,False
+26,Market Research Intern,sales_bd,marketing,other_india,remote,Yes,True
+28,Fresher - Customer Care Executive - Hyderabad,customer_support,customer_support,other_india,hyderabad,Yes,True
+29,"Business Analyst, Marketing-1 (Fixed Term)",marketing,data_analytics,bengaluru,bengaluru,No,False
+31,Graduate Engineer Trainee,operations_logistics,core_engineering,bengaluru,bengaluru,Yes,True
+39,Trainee Assistant Professor/Researcher,research,teaching_education,other_india,other_india,Yes,True
+41,Relationship Trainee,operations_logistics,admin_back_office,chennai,chennai,Yes,True
+43,Airport Ground Staff Job For Fresher Airport Ground Staff (Full Time),hospitality_retail,hospitality_retail,other_india,unknown,Yes,True
+45,full stack developer intern,software_dev,software_dev,bengaluru,remote,Yes,True
+47,Graduate Trainee Engineer - Cooling (Mechnical),other,core_engineering,bengaluru,bengaluru,Yes,True
+48,Telecaller - Fresher,customer_support,sales_bd,mumbai,mumbai,Yes,True
+50,Fraud Operations Associate SDC,it_devops_security,it_devops_security,bengaluru,bengaluru,Yes,False

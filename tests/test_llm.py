@@ -75,6 +75,27 @@ def test_tag_result_schema_validation():
             city=City.pune,
         )
 
+    # Former non-canonical roles must be strictly rejected
+    for bad_role in ("human_resources", "operations_supply_chain", "finance_accounting"):
+        with pytest.raises(ValidationError):
+            TagResult(
+                index=0,
+                post_type=PostType.job,
+                is_fresher=True,
+                role=bad_role,  # type: ignore[arg-type]
+                city=City.pune,
+            )
+
+    # Invalid city
+    with pytest.raises(ValidationError):
+        TagResult(
+            index=0,
+            post_type=PostType.job,
+            is_fresher=True,
+            role=Role.software_dev,
+            city="san_francisco",  # type: ignore[arg-type]
+        )
+
 
 def test_repair_retry_on_invalid_json():
     # Simulate Groq returning bad JSON first, then valid JSON on repair retry

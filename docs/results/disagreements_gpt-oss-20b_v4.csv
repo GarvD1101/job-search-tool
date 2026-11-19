@@ -1,0 +1,17 @@
+row #,title,my role,model role,my city,model city,my fresher label,model is_fresher
+3,Cybersecurity Intern,other,it_devops_security,hyderabad,hyderabad,Yes,True
+5,Fast Track Operations Specialist 2,customer_support,operations_logistics,remote,remote,No,False
+13,Service Desk Specialist,customer_support,it_devops_security,hyderabad,hyderabad,No,False
+14,Data Entry Operator,other,admin_back_office,hyderabad,hyderabad,Yes,True
+15,Graduate Trainee - Business Development,sales_bd,sales_bd,delhi_ncr,mumbai,Yes,True
+18,Data Entry Operator,other,admin_back_office,other_india,other_india,Yes,True
+19,Head Campus Administration,operations_logistics,admin_back_office,pune,pune,Unsure,False
+23,Apprentice,hospitality_retail,customer_support,delhi_ncr,delhi_ncr,Yes,True
+26,Market Research Intern,sales_bd,research,other_india,hyderabad,Yes,True
+28,Fresher - Customer Care Executive - Hyderabad,customer_support,customer_support,other_india,hyderabad,Yes,True
+29,"Business Analyst, Marketing-1 (Fixed Term)",marketing,product_management,bengaluru,bengaluru,No,False
+31,Graduate Engineer Trainee,operations_logistics,core_engineering,bengaluru,bengaluru,Yes,True
+34,urgent hiring fresher job delhi web desing/software developer/web developer/php/react /devops,software_dev,it_devops_security,delhi_ncr,delhi_ncr,Yes,True
+37,On-Ground Consumer Research Intern,marketing,research,hyderabad,hyderabad,Yes,True
+41,Relationship Trainee,operations_logistics,admin_back_office,chennai,chennai,Yes,True
+47,Graduate Trainee Engineer - Cooling (Mechnical),other,core_engineering,bengaluru,bengaluru,Yes,True

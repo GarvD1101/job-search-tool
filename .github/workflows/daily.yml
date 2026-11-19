@@ -50,3 +50,8 @@ jobs:
         run: |
           TRIGGER="${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}"
           python -m pipeline.run --stage filter --trigger "$TRIGGER"
+
+      - name: Run Tag Stage
+        run: |
+          python -m pipeline.run --stage tag --model "${TAG_MODEL:-openai/gpt-oss-20b}"
+

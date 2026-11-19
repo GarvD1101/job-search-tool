@@ -87,3 +87,23 @@ Verified on the official Groq pricing documentation as of 2026-11-17:
    - Row Level Security (RLS) enabled on all tables (runs, raw_posts, jobs, llm_calls) with zero policies.
    - Prevents unauthorized reads via PostgREST / public Data API.
    - Ingestion pipeline connects directly via Postgres owner role over the Supabase Session pooler (port 5432).
+
+---
+
+## 2026-11-19  Strict Taxonomy Alignment and tag_v3 Prompt Revision
+
+1. Canonical Taxonomy Restoration:
+   - Reverted role definitions and prompt keys to canonical taxonomy: `hr_recruitment`, `finance_banking`, and `operations_logistics`.
+   - Removed temporary aliases (`human_resources`, `finance_accounting`, `operations_supply_chain`) from `Role` enum in `pipeline/llm/base.py`.
+   - Enforced that `TagResult` strictly validates against canonical enums without coercion.
+
+2. Validation Failure Protocol:
+   - On out-of-enum output, the provider performs exactly one repair retry that explicitly restates the allowed lists for `role`, `city`, and `post_type`.
+   - If repair also fails, the job record receives status `needs_review` with rule reason `invalid_llm_json`. Coercion or guessing is forbidden.
+
+3. Database CHECK Constraints:
+   - Confirmed and applied explicit CHECK constraints on the `jobs` table for `role`, `city`, and `post_type`.
+   - Schema re-applied to Supabase database.
+
+4. Prompt Versioning:
+   - Introduced `pipeline/llm/prompts/tag_v3.txt` incorporating canonical role names. `tag_v1.txt` and `tag_v2.txt` remain frozen.

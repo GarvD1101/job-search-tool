@@ -569,8 +569,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--prompt-version",
-        default="tag_v1",
-        help="Prompt template version (default: tag_v1)",
+        default="tag_v4",
+        help="Prompt template version (default: tag_v4)",
     )
     parser.add_argument(
         "--sources",
@@ -692,15 +692,39 @@ def main() -> int:
             return 0
 
         prod_stats = manager.run_production_mode(limit=args.limit)
+        tok = prod_stats.get("tokens_used", {})
+        db = prod_stats.get("db_stats", {})
         print("\n" + "=" * 60)
         print("PRODUCTION TAGGING SUMMARY")
         print("=" * 60)
         print(f"Model: {args.model}")
+        print(f"Prompt Version: {args.prompt_version}")
         print(f"Status: {prod_stats.get('status')}")
-        print(f"Processed: {prod_stats.get('total_processed', 0)}")
+        tagged_count = prod_stats.get("posts_tagged", prod_stats.get("total_processed", 0))
+        print(f"Posts Tagged: {tagged_count}")
         print(f"Cache Hits: {prod_stats.get('cache_hits', 0)}")
         print(f"Live Calls: {prod_stats.get('live_calls', 0)}")
+        print("Tokens Used (This Run):")
+        print(f"  - Input Tokens: {tok.get('input_tokens', 0)}")
+        print(f"  - Output Tokens: {tok.get('output_tokens', 0)}")
+        print(f"  - Reasoning Tokens: {tok.get('reasoning_tokens', 0)}")
+        print(f"  - Total Run Tokens: {tok.get('total_run_tokens', 0)}")
+        print(f"List-Price Cost: ${prod_stats.get('list_price_cost', 0.0):.4f}")
         print(f"Tokens Used Today: {prod_stats.get('tokens_used_today', 0)}")
+        print(f"Validation Failures: {prod_stats.get('validation_failures', 0)}")
+        if db:
+            print("\nDatabase Status Counts (After):")
+            for s, c in db.get("status_counts", {}).items():
+                print(f"  - {s}: {c}")
+            print("\nRejected Reasons (Database):")
+            for r, c in db.get("rejected_reasons", {}).items():
+                print(f"  - {r}: {c}")
+            print("\nRole Distribution (Active / Tagged):")
+            for r, c in db.get("role_distribution", {}).items():
+                print(f"  - {r}: {c}")
+            print("\nCity Distribution (Active / Tagged):")
+            for city, c in db.get("city_distribution", {}).items():
+                print(f"  - {city}: {c}")
         print("=" * 60 + "\n")
         return 0
 

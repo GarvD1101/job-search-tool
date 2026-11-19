@@ -85,6 +85,10 @@ ALTER TABLE jobs ADD CONSTRAINT jobs_city_check CHECK (city IS NULL OR city IN (
     'bengaluru', 'hyderabad', 'pune', 'mumbai', 'delhi_ncr',
     'chennai', 'kolkata', 'ahmedabad', 'other_india', 'remote', 'unknown'
 ));
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_post_type_check;
+ALTER TABLE jobs ADD CONSTRAINT jobs_post_type_check CHECK (post_type IS NULL OR post_type IN (
+    'job', 'internship', 'trainee', 'fellowship', 'course_or_workshop', 'event', 'other'
+));
 
 CREATE INDEX IF NOT EXISTS idx_jobs_canonical_key ON jobs (canonical_key);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);

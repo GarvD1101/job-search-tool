@@ -92,3 +92,18 @@ Root cause: UsageCounter.__init__ fell back to os.environ.get("SUPABASE_DB_URL")
 Fix: Added use_db=False parameter to UsageCounter and updated unit tests to disable DB access for isolated tests.
 Commit: pending
 Next time: Explicitly isolate test dependencies from environment variables connecting to remote services.
+
+## 2026-11-19 08:45  Role Taxonomy Drift in Tagging Prompt v2 and Model Aliasing
+Symptom: In benchmark scoring, all models produced role classifications "human_resources" and "operations_supply_chain" which mismatched ground truth labels (hr_recruitment, operations_logistics), while JSON validity incorrectly reported 100%.
+Root cause: During prompt v2 drafting, role definition keys were added as human_resources, finance_accounting, and operations_supply_chain instead of canonical taxonomy enum values. Role enum in pipeline/llm/base.py was also given temporary aliases for these strings, so Pydantic passed them without validation errors.
+Fix: Restored Role enum to strictly the 22 canonical taxonomy roles in base.py and taxonomy.yaml. Created tag_v3.txt with correct canonical names (hr_recruitment, finance_banking, operations_logistics). Updated repair prompt to explicitly restate the allowed enum lists for role, city, and post_type on validation failure.
+Commit: pending
+Next time: Never introduce model-level enum aliases that drift from the database schema CHECK constraints and ground-truth taxonomy.
+
+## 2026-11-19 10:28  Database post_type CHECK Constraint Rejected Valid Taxonomy Enums
+Symptom: Schema check constraint jobs_post_type_check only permitted values 'job' and 'internship', risking constraint violation for valid posts with post_type 'trainee' or non-job classifications.
+Root cause: The initial database schema definition restricted post_type to ('job', 'internship') while the application PostType enum and benchmark posts included 'trainee', 'fellowship', 'course_or_workshop', 'event', and 'other'.
+Fix: Updated jobs_post_type_check in db/schema.sql to allow all seven taxonomy post_type values ('job', 'internship', 'trainee', 'fellowship', 'course_or_workshop', 'event', 'other') or NULL. Applied the schema to Supabase and added unit tests in tests/test_bootstrap.py.
+Commit: pending
+Next time: Align database schema check constraints directly with the application enums from day one.
+
