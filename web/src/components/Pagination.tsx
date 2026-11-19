@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { ChevronLeftIcon, ChevronRightIcon } from "./Icons";
 
 export default function Pagination({
   currentPage,
@@ -20,44 +21,49 @@ export default function Pagination({
     return `/?${params.toString()}`;
   };
 
+  const currPadded = String(currentPage).padStart(2, "0");
+  const totalPadded = String(totalPages).padStart(2, "0");
+
   return (
     <nav
       role="navigation"
-      aria-label="Pagination"
-      className="flex items-center justify-between border-t border-slate-200 px-4 py-4 sm:px-0 mt-8"
+      aria-label="Pagination Navigation"
+      className="bg-canvas border-t border-grid px-4 py-3 flex items-center justify-between font-mono text-xs"
     >
-      <div className="flex w-0 flex-1">
+      <div>
         {currentPage > 1 ? (
           <Link
             href={createPageUrl(currentPage - 1)}
-            className="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+            className="border border-grid hover:border-ink bg-surface px-3 py-1.5 rounded-[2px] text-ink hover:text-amber-signal transition-colors inline-flex items-center gap-1 font-semibold"
           >
-            &larr; Previous
+            <ChevronLeftIcon size={13} />
+            <span>PREV</span>
           </Link>
         ) : (
-          <span className="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-slate-300 cursor-not-allowed">
-            &larr; Previous
+          <span className="border border-grid/60 bg-surface/50 px-3 py-1.5 rounded-[2px] text-ink-muted/50 cursor-not-allowed inline-flex items-center gap-1">
+            <ChevronLeftIcon size={13} />
+            <span>PREV</span>
           </span>
         )}
       </div>
 
-      <div className="hidden md:flex">
-        <span className="inline-flex items-center border-t-2 border-sky-500 px-4 pt-4 text-sm font-medium text-sky-600">
-          Page {currentPage} of {totalPages}
-        </span>
+      <div className="font-semibold text-ink tracking-wider">
+        PAGE {currPadded} OF {totalPadded}
       </div>
 
-      <div className="flex w-0 flex-1 justify-end">
+      <div>
         {currentPage < totalPages ? (
           <Link
             href={createPageUrl(currentPage + 1)}
-            className="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+            className="border border-grid hover:border-ink bg-surface px-3 py-1.5 rounded-[2px] text-ink hover:text-amber-signal transition-colors inline-flex items-center gap-1 font-semibold"
           >
-            Next &rarr;
+            <span>NEXT</span>
+            <ChevronRightIcon size={13} />
           </Link>
         ) : (
-          <span className="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-slate-300 cursor-not-allowed">
-            Next &rarr;
+          <span className="border border-grid/60 bg-surface/50 px-3 py-1.5 rounded-[2px] text-ink-muted/50 cursor-not-allowed inline-flex items-center gap-1">
+            <span>NEXT</span>
+            <ChevronRightIcon size={13} />
           </span>
         )}
       </div>
