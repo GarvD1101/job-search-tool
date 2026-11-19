@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 // Target base URL configurable via environment variable
-const BASE_URL = __ENV.TARGET_URL || 'http://localhost:3000';
+const BASE_URL = __ENV.BASE_URL || __ENV.TARGET_URL || 'http://localhost:3000';
 
 // Scenario parameters
 const SEARCH_TERMS = [

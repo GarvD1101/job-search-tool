@@ -1,0 +1,16 @@
+DRY TEST EXECUTION REPORT
+Timestamp: 2026-11-19 14:53:36 UTC
+Total Elapsed Time: 0.099 seconds (Target: < 60s)
+Status: PASSED
+
+Pipeline Counts:
+  - Raw posts processed: 7
+  - Active fresher jobs: 3
+  - Rejected jobs: 3
+  - Duplicate jobs: 1
+  - Total jobs in DB: 7
+
+LLM Mock Execution:
+  - Calls made: 1
+  - Network calls: 0 (guarded socket verified)
+  - All output tags validated against taxonomy.

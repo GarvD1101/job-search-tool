@@ -57,17 +57,17 @@ The test simulates realistic fresher job searches with a mix of:
    pnpm run start
    ```
 
-2. Run load test from repository root:
+2. Smoke Test (5 concurrent users for 1 minute):
    ```powershell
-   k6 run loadtest/search.js
+   k6 run --vus 5 --duration 1m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_smoke.json loadtest/search.js
    ```
 
-3. To target a custom URL or port:
+3. Reduced Load Test (20 concurrent users for 2 minutes, matches live scale):
    ```powershell
-   k6 run -e TARGET_URL=http://localhost:3000 loadtest/search.js
+   k6 run --vus 20 --duration 2m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_reduced.json loadtest/search.js
    ```
 
-4. Export test results to JSON:
+4. Full Profile Load Test (50 concurrent users for 3 minutes, local production build):
    ```powershell
-   k6 run --summary-export=docs/results/k6_summary.json loadtest/search.js
+   k6 run --vus 50 --duration 3m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_full.json loadtest/search.js
    ```

@@ -1,0 +1,51 @@
+row_num,post_title,true_fresher,pred_fresher,fresher_match,true_role,pred_role,role_match,true_city,pred_city,city_match
+1,"Hiring CS Executive for a law firm at Kolkata, West Bengal",False,False,True,legal_compliance,legal_compliance,True,kolkata,kolkata,True
+2,Software Engineer - IAM,False,False,True,software_dev,software_dev,True,pune,pune,True
+3,Cybersecurity Intern,True,True,True,other,it_devops_security,False,hyderabad,hyderabad,True
+4,Back Office Executive - Fresher,True,True,True,admin_back_office,admin_back_office,True,pune,pune,True
+5,Fast Track Operations Specialist 2,False,False,True,customer_support,operations_logistics,False,remote,remote,True
+6,Inside Sales Executive - Fresher,True,True,True,sales_bd,sales_bd,True,mumbai,mumbai,True
+7,Administration Executive - Fresher,True,True,True,admin_back_office,admin_back_office,True,kolkata,kolkata,True
+8,Sales Associate - Fresher,True,True,True,sales_bd,sales_bd,True,delhi_ncr,delhi_ncr,True
+9,Junior Software Engineer (React) (work from home),True,True,True,software_dev,software_dev,True,pune,pune,True
+10,Social Media Marketing Intern,True,True,True,marketing,marketing,True,pune,pune,True
+11,Graduate Apprentice Trainee,True,True,True,marketing,marketing,True,hyderabad,hyderabad,True
+12,Leading international BPO hiring for website sales campaign,True,True,True,customer_support,customer_support,True,kolkata,kolkata,True
+13,Service Desk Specialist,False,False,True,customer_support,it_devops_security,False,hyderabad,hyderabad,True
+14,Data Entry Operator,True,True,True,other,admin_back_office,False,hyderabad,hyderabad,True
+15,Graduate Trainee - Business Development,True,True,True,sales_bd,sales_bd,True,delhi_ncr,mumbai,False
+16,HR IT Recruiter ( Internship ) - Work From Offce,True,True,True,hr_recruitment,hr_recruitment,True,hyderabad,hyderabad,True
+17,Sales Tellecaller Intern,True,True,True,sales_bd,sales_bd,True,kolkata,kolkata,True
+18,Data Entry Operator,True,True,True,other,admin_back_office,False,other_india,other_india,True
+19,Head Campus Administration,False,False,True,operations_logistics,admin_back_office,False,pune,pune,True
+20,api integration intern,True,True,True,software_dev,software_dev,True,pune,pune,True
+21,Looking for HR Intern (MBA/BBA),True,True,True,hr_recruitment,hr_recruitment,True,other_india,other_india,True
+22,Insurance Executive,True,True,True,sales_bd,sales_bd,True,delhi_ncr,delhi_ncr,True
+23,Apprentice,True,True,True,hospitality_retail,customer_support,False,delhi_ncr,delhi_ncr,True
+24,Campus Recruitment Internship,True,True,True,hr_recruitment,hr_recruitment,True,remote,remote,True
+25,Recruiter,True,True,True,hr_recruitment,hr_recruitment,True,other_india,other_india,True
+26,Market Research Intern,True,True,True,sales_bd,research,False,other_india,hyderabad,False
+27,Jr. Data Analyst,True,True,True,data_analytics,data_analytics,True,mumbai,mumbai,True
+28,Fresher - Customer Care Executive - Hyderabad,True,True,True,customer_support,customer_support,True,other_india,hyderabad,False
+29,"Business Analyst, Marketing-1 (Fixed Term)",False,False,True,marketing,product_management,False,bengaluru,bengaluru,True
+30,Customer Care Executive,True,True,True,customer_support,customer_support,True,kolkata,kolkata,True
+31,Graduate Engineer Trainee,True,True,True,operations_logistics,core_engineering,False,bengaluru,bengaluru,True
+32,Fresher hiring branch banking role,True,True,True,finance_banking,finance_banking,True,bengaluru,bengaluru,True
+33,Customer Service Associate - Fresher,True,True,True,customer_support,customer_support,True,pune,pune,True
+34,urgent hiring fresher job delhi web desing/software developer/web developer/php/react /devops,True,True,True,software_dev,it_devops_security,False,delhi_ncr,delhi_ncr,True
+35,Seeking CBSE Primary Tuition Teacher for Class I to V,True,True,True,teaching_education,teaching_education,True,delhi_ncr,delhi_ncr,True
+36,Receptionist,True,True,True,healthcare,admin_back_office,False,mumbai,mumbai,True
+37,On-Ground Consumer Research Intern,True,True,True,marketing,research,False,hyderabad,hyderabad,True
+38,Customer support associate,True,True,True,customer_support,customer_support,True,kolkata,kolkata,True
+39,Trainee Assistant Professor/Researcher,True,True,True,research,research,True,other_india,other_india,True
+40,Digital Marketing Intern,True,True,True,marketing,marketing,True,other_india,other_india,True
+41,Relationship Trainee,True,True,True,operations_logistics,admin_back_office,False,chennai,chennai,True
+42,Software Trainee,True,True,True,software_dev,software_dev,True,mumbai,mumbai,True
+43,Airport Ground Staff Job For Fresher Airport Ground Staff (Full Time),True,True,True,hospitality_retail,hospitality_retail,True,other_india,other_india,True
+44,Jr Business Researcher,True,True,True,data_analytics,data_analytics,True,mumbai,mumbai,True
+45,full stack developer intern,True,True,True,software_dev,software_dev,True,bengaluru,bengaluru,True
+46,Human Resources Intern,True,True,True,hr_recruitment,hr_recruitment,True,pune,pune,True
+47,Graduate Trainee Engineer - Cooling (Mechnical),True,True,True,other,core_engineering,False,bengaluru,bengaluru,True
+48,Telecaller - Fresher,True,True,True,customer_support,customer_support,True,mumbai,mumbai,True
+49,Associate Placement Executive,True,True,True,hr_recruitment,hr_recruitment,True,pune,pune,True
+50,Fraud Operations Associate SDC,True,True,True,it_devops_security,it_devops_security,True,bengaluru,bengaluru,True

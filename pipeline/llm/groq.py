@@ -240,9 +240,18 @@ class GroqProvider(BaseLLMProvider):
                 ]
             except Exception as final_err:
                 logger.error("Repair retry also failed validation: %s", final_err)
-                raise ValidationError.from_exception_data(
-                    title="TagResult", line_errors=[]
-                ) from final_err
+                parsed_results = [
+                    TagResult(
+                        index=idx,
+                        post_type=PostType.other,
+                        is_fresher=False,
+                        role=Role.other,
+                        city=City.unknown,
+                        status="needs_review",
+                        reason=f"Validation failed after repair: {final_err}",
+                    )
+                    for idx, _ in enumerate(posts)
+                ]
 
         usage = Usage(
             input_tokens=prompt_tokens,

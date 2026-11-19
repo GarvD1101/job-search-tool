@@ -1,0 +1,18 @@
+SECTION 1: PIPELINE TAGGING COST SCENARIOS (LLM API ONLY)
+raw_posts_per_day,tagged_survivors_per_day,model,daily_cost_usd,weekly_cost_usd,monthly_cost_usd,annual_cost_usd,cost_per_1000_raw_posts_usd
+200,110.7,openai/gpt-oss-20b,0.004259,0.0298,0.1278,1.5545,0.0213
+200,110.7,openai/gpt-oss-120b,0.008539,0.0598,0.2562,3.1169,0.0427
+200,110.7,qwen/qwen3.8-27b,0.046126,0.3229,1.3838,16.8361,0.2306
+600,332.1,openai/gpt-oss-20b,0.012777,0.0894,0.3833,4.6635,0.0213
+600,332.1,openai/gpt-oss-120b,0.025618,0.1793,0.7685,9.3506,0.0427
+600,332.1,qwen/qwen3.8-27b,0.138375,0.9686,4.1513,50.5069,0.2306
+2000,1107.0,openai/gpt-oss-20b,0.042589,0.2981,1.2777,15.5451,0.0213
+2000,1107.0,openai/gpt-oss-120b,0.085393,0.5977,2.5618,31.1684,0.0427
+2000,1107.0,qwen/qwen3.8-27b,0.461256,3.2288,13.8377,168.3584,0.2306
+
+SECTION 2: FULL-STACK SERVING SCENARIOS (LLM + DB + HOSTING)
+daily_active_users,monthly_searches,supabase_tier,supabase_monthly_usd,vercel_tier,vercel_monthly_usd,llm_monthly_usd,total_weekly_usd,total_monthly_usd,total_annual_usd,cost_per_1000_users_usd
+1000,150000,Free ($0/mo),0.0,Hobby ($0/mo),0.0,0.3833,0.09,0.38,4.6,0.3833
+10000,1500000,Pro ($25/mo),25.0,Pro ($20/mo),20.0,0.3833,10.59,45.38,544.6,4.5383
+100000,15000000,Pro + Compute ($45/mo),45.0,Pro + Usage ($50/mo),50.0,0.3833,22.26,95.38,1144.6,0.9538
+1000000,150000000,Team ($599/mo),599.0,"Enterprise (estimate, custom pricing: $500/mo)",500.0,0.3833,256.52,1099.38,13192.6,1.0994

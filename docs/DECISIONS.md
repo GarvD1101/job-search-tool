@@ -107,3 +107,22 @@ Verified on the official Groq pricing documentation as of 2026-11-17:
 
 4. Prompt Versioning:
    - Introduced `pipeline/llm/prompts/tag_v3.txt` incorporating canonical role names. `tag_v1.txt` and `tag_v2.txt` remain frozen.
+
+---
+
+## 2026-11-19  tag_v4 Verbatim Definitions, Job Identity Migration, and Query Caching
+
+1. Verbatim Role Definitions (tag_v4.txt):
+   - Created `tag_v4.txt` using verbatim role definitions matching project specification.
+   - Updated `config/taxonomy.yaml` with the identical definitions.
+   - Preserved `tag_v1.txt`, `tag_v2.txt`, and `tag_v3.txt` as immutable historical versions.
+
+2. Job Identity Migration:
+   - Migrated `jobs` primary natural identity from volatile hash keys to `UNIQUE (source, source_id)`.
+   - Repurposed `dedup_key` as a non-unique clustering attribute.
+   - Deduplicated existing records while preserving all 440 tagged posts.
+   - Bound deduplication master-pointer via `duplicate_of` to the canonical survivor.
+
+3. Performance Optimization via Server-Side Caching:
+   - Wrapped database access in Next.js `unstable_cache` (`revalidate: 300`) for `/api/jobs` and `getLastRefresh()`.
+   - Ensured zero uncached database round trips on warm page visits.

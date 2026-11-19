@@ -1,0 +1,118 @@
+# Cost and scale assumptions for Fresher Radar pipeline and web serving
+# Last verified: 2026-11-19
+
+measured_pipeline_metrics:
+  # Measured from live production database (llm_calls and jobs tables)
+  survivor_rate: 0.5535 # 1,127 survivors / 2,036 total raw posts
+  rejection_rate: 0.4465 # 820 rule rejected + 89 duplicate / 2,036
+  avg_batch_size: 10 # 10 posts per LLM API call
+
+  models:
+    openai/gpt-oss-20b:
+      input_tokens_per_post: 218.25
+      output_tokens_per_post: 73.68 # Includes 44.20 reasoning tokens
+      reasoning_tokens_per_post: 44.20
+      input_price_per_1m: 0.075
+      output_price_per_1m: 0.30
+      pricing_type: "published list price"
+      source_url: "https://groq.com/pricing/"
+      last_verified: "2026-11-19"
+
+    openai/gpt-oss-120b:
+      input_tokens_per_post: 215.22
+      output_tokens_per_post: 74.76 # Includes 45.69 reasoning tokens
+      reasoning_tokens_per_post: 45.69
+      input_price_per_1m: 0.15
+      output_price_per_1m: 0.60
+      pricing_type: "published list price"
+      source_url: "https://groq.com/pricing/"
+      last_verified: "2026-11-19"
+
+    qwen/qwen3.8-27b:
+      input_tokens_per_post: 237.29
+      output_tokens_per_post: 56.71 # No reasoning tokens
+      reasoning_tokens_per_post: 0.00
+      input_price_per_1m: 0.80
+      output_price_per_1m: 4.00
+      pricing_type: "published list price"
+      source_url: "https://groq.com/pricing/"
+      last_verified: "2026-11-19"
+
+pipeline_volume_scenarios:
+  low:
+    raw_posts_per_day: 200
+    description: "Off-peak or weekend volume"
+  baseline:
+    raw_posts_per_day: 600
+    description: "Normal daily fresher posting volume from Jooble and Greenhouse"
+  high:
+    raw_posts_per_day: 2000
+    description: "Peak hiring season with expanded board coverage"
+
+serving_traffic_assumptions:
+  searches_per_user_day: 5
+  cdn_cache_hit_rate: 0.80
+  db_query_rate: 0.20 # 20% reach Postgres via transaction pooler
+  avg_response_payload_kb: 10
+  commercial_note: "Vercel Hobby is personal use only. Commercial launches require Pro tier."
+
+serving_pricing_tiers:
+  supabase:
+    source_url: "https://supabase.com/pricing"
+    last_verified: "2026-11-19"
+    tiers:
+      free:
+        price_per_month: 0.0
+        pricing_type: "published list price"
+        max_db_size_mb: 500
+        max_egress_gb_per_month: 5.0
+        max_connections: 200
+        suitable_up_to_dau: 1000
+      pro:
+        price_per_month: 25.0
+        pricing_type: "published list price"
+        included_db_size_gb: 8.0
+        included_egress_gb_per_month: 250.0
+        max_connections: 10000
+        suitable_up_to_dau: 50000
+      pro_with_compute:
+        price_per_month: 45.0 # $25 base + $20 Small compute addon
+        pricing_type: "published list price"
+        included_db_size_gb: 8.0
+        included_egress_gb_per_month: 250.0
+        max_connections: 10000
+        suitable_up_to_dau: 200000
+      team:
+        price_per_month: 599.0
+        pricing_type: "published list price"
+        included_db_size_gb: 16.0
+        included_egress_gb_per_month: 250.0
+        max_connections: 10000
+        suitable_up_to_dau: 1000000
+
+  vercel:
+    source_url: "https://vercel.com/pricing"
+    last_verified: "2026-11-19"
+    tiers:
+      hobby:
+        price_per_month: 0.0
+        pricing_type: "published list price (non-commercial)"
+        included_bandwidth_gb_per_month: 100.0
+        suitable_up_to_dau: 1000
+        note: "Personal and hobby projects only; not licensed for commercial production."
+      pro:
+        price_per_month: 20.0 # 1 team seat
+        pricing_type: "published list price"
+        included_bandwidth_tb_per_month: 1.0
+        suitable_up_to_dau: 100000
+      pro_scale:
+        price_per_month: 50.0 # $20 base + $30 usage/bandwidth overage
+        pricing_type: "published list price plus usage formula"
+        included_bandwidth_tb_per_month: 1.5
+        suitable_up_to_dau: 250000
+      enterprise:
+        price_per_month: 500.0
+        pricing_type: "estimate, custom pricing"
+        basis: "Estimated enterprise contract for 150M edge requests/mo, 1.5 TB bandwidth, and custom SLA"
+        included_bandwidth_tb_per_month: 5.0
+        suitable_up_to_dau: 1000000

@@ -177,47 +177,52 @@ def test_jobs_post_type_check_constraint_allows_trainee_and_course_or_workshop()
             """
         )
 
-    # 4. Also verify live PostgreSQL with rollback if reachable
-    db_url = os.environ.get("SUPABASE_DB_URL")
-    if db_url:
-        import psycopg
+    # 4. Optional live PostgreSQL check with rollback only if explicitly enabled
+    if os.environ.get("ALLOW_DB_TESTS") != "1":
+        return
 
-        try:
-            with psycopg.connect(db_url, connect_timeout=3) as pg_conn:
-                with pg_conn.transaction():
-                    with pg_conn.cursor() as pg_cur:
-                        pg_cur.execute(
-                            """
-                            INSERT INTO jobs (
-                                canonical_key, title, company, url, source,
-                                status, post_type, role, city
-                            ) VALUES (
-                                'test_live_trainee_key', 'Graduate Trainee Engineer', 'Acme Corp',
-                                'https://example.com/job/trainee', 'greenhouse',
-                                'active', 'trainee', 'core_engineering', 'pune'
-                            );
-                            """
-                        )
-                        pg_cur.execute(
-                            """
-                            INSERT INTO jobs (
-                                canonical_key, title, company, url, source,
-                                status, post_type, rule_decision, rule_reason
-                            ) VALUES (
-                                'test_live_course_key', 'Full Stack Java Bootcamp', 'Institute',
-                                'https://example.com/course/1', 'jooble',
-                                'rejected', 'course_or_workshop', 'reject', 'not_a_job_post'
-                            );
-                            """
-                        )
-                        pg_cur.execute(
-                            "SELECT post_type FROM jobs "
-                            "WHERE canonical_key IN ("
-                            "'test_live_trainee_key', 'test_live_course_key');"
-                        )
-                        pts = {r[0] for r in pg_cur.fetchall()}
-                        assert pts == {"trainee", "course_or_workshop"}
-                        pg_conn.rollback()
-        except (psycopg.OperationalError, Exception):
-            pass
+    db_url = os.environ.get("SUPABASE_DB_URL")
+    if not db_url:
+        return
+
+    import psycopg
+
+    try:
+        with psycopg.connect(db_url, connect_timeout=3) as pg_conn:
+            with pg_conn.transaction():
+                with pg_conn.cursor() as pg_cur:
+                    pg_cur.execute(
+                        """
+                        INSERT INTO jobs (
+                            canonical_key, title, company, url, source,
+                            status, post_type, role, city
+                        ) VALUES (
+                            'test_live_trainee_key', 'Graduate Trainee Engineer', 'Acme Corp',
+                            'https://example.com/job/trainee', 'greenhouse',
+                            'active', 'trainee', 'core_engineering', 'pune'
+                        );
+                        """
+                    )
+                    pg_cur.execute(
+                        """
+                        INSERT INTO jobs (
+                            canonical_key, title, company, url, source,
+                            status, post_type, rule_decision, rule_reason
+                        ) VALUES (
+                            'test_live_course_key', 'Full Stack Java Bootcamp', 'Institute',
+                            'https://example.com/course/1', 'jooble',
+                            'rejected', 'course_or_workshop', 'reject', 'not_a_job_post'
+                        );
+                        """
+                    )
+                    pg_cur.execute(
+                        "SELECT post_type FROM jobs "
+                        "WHERE canonical_key IN ("
+                        "'test_live_trainee_key', 'test_live_course_key');"
+                    )
+                    pts = {r[0] for r in pg_cur.fetchall()}
+                    assert pts == {"trainee", "course_or_workshop"}
+                    pg_conn.rollback()
+    except (psycopg.OperationalError, Exception):
+        pass
 

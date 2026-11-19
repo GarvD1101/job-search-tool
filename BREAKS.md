@@ -121,4 +121,11 @@ Fix: Removed the duplicate source: string declaration from Job in web/src/lib/ty
 Commit: pending
 Next time: Run tsc --noEmit before triggering full production builds.
 
+## 2026-11-19 19:00  Uncached Database Query in Global Header Caused 200ms Latency
+Symptom: Warm page requests to home page took over 200 ms despite cached job query results.
+Root cause: Header.tsx executed getLastRefresh() directly to Supabase Tokyo on every render without caching.
+Fix: Wrapped getLastRefresh() in web/src/lib/jobs.ts with Next.js unstable_cache (300-second revalidation, tags: ["runs"]). Also wrapped /api/jobs in getCachedJobs. Warm latency dropped from 200 ms to 62.3 ms for HTML SSR and 7.6 ms for the API route.
+Commit: pending
+Next time: Audit all global layout and navigation components to ensure zero uncached database queries on warm page loads.
+
 

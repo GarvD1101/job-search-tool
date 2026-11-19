@@ -1,0 +1,25 @@
+{
+  "scale_test_timestamp": "2026-11-19 14:00:26 UTC",
+  "total_posts_tested": 1200,
+  "timing_breakdown_seconds": {
+    "normalization": 0.373,
+    "rule_filtering": 2.04,
+    "deduplication": 1.101,
+    "mock_llm_tagging": 0.041,
+    "total_elapsed": 3.637
+  },
+  "throughput_posts_per_sec": 330.0,
+  "memory_profile_mb": {
+    "final_memory_mb": 2.15,
+    "peak_memory_mb": 2.21
+  },
+  "pipeline_counts": {
+    "raw_posts": 1200,
+    "rule_survivors": 620,
+    "rule_rejects": 580,
+    "duplicates_detected": 293,
+    "survivor_masters_tagged": 327
+  },
+  "status": "PASSED",
+  "notes": "No memory leak or unbounded memory growth detected under load."
+}

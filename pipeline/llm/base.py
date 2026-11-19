@@ -72,6 +72,8 @@ class TagResult(BaseModel):
     role: Role
     city: City
     is_remote: bool = False
+    status: str = "success"
+    reason: str | None = None
 
     @model_validator(mode="after")
     def compute_is_remote(self) -> "TagResult":

@@ -2,6 +2,7 @@ import csv
 import hashlib
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
@@ -277,8 +278,10 @@ class TagManager:
         self,
         limit: int | None = None,
         run_id: int | None = None,
+        max_minutes: float | None = 25.0,
     ) -> dict[str, Any]:
         """Tag jobs with status pending_tag up to token budget guard limit."""
+        start_time = time.time()
         today_used = get_today_token_usage(self.model)
         if today_used >= self.daily_budget_tokens:
             logger.warning(
@@ -401,6 +404,13 @@ class TagManager:
                 uncached_batch.clear()
 
         for job in pending:
+            if max_minutes is not None and (time.time() - start_time) >= (max_minutes * 60):
+                logger.info(
+                    "Reached max runtime limit of %.1f minutes. Halting production tagging.",
+                    max_minutes,
+                )
+                break
+
             if tokens_accumulated >= self.daily_budget_tokens:
                 logger.warning(
                     "Token budget stop reached (%d >= %d). Halting production tagging.",

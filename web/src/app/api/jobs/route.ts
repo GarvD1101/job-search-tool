@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJobs } from "@/lib/jobs";
+import { getCachedJobs } from "@/lib/jobs";
 import {
   ALLOWED_CITY_VALUES,
   ALLOWED_POST_TYPE_VALUES,
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const rawPageSize = parseInt(searchParams.get("pageSize") || "20", 10);
     const pageSize = Math.min(50, Math.max(1, isNaN(rawPageSize) ? 20 : rawPageSize));
 
-    const response = await getJobs({
+    const response = await getCachedJobs({
       q,
       role,
       city,

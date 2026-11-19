@@ -1,0 +1,36 @@
+================================================================================
+FRESHER-RADAR DATABASE CAPACITY AND STORAGE PROJECTION REPORT
+================================================================================
+
+1. CURRENT DATABASE STORAGE BREAKDOWN (Application Tables)
+--------------------------------------------------------------------------------
+Table           | Rows     | Total (MB) | Table (MB) | Index (MB) | Avg Bytes/Row
+--------------------------------------------------------------------------------
+jobs            | 1489     |      17.12 |       2.65 |       5.55 |       12054.2
+raw_posts       | 1481     |       4.87 |       0.82 |       0.33 |        3446.1
+llm_calls       | 95       |       0.09 |       0.02 |       0.05 |        1034.8
+runs            | 10       |       0.11 |       0.01 |       0.02 |       11468.8
+source_usage    | 3        |       0.03 |       0.01 |       0.02 |       10922.7
+--------------------------------------------------------------------------------
+Total Application Storage: 22.22 MB (23,298,048 bytes)
+
+2. STORAGE GROWTH PROJECTIONS (500 MB Free Tier Cap)
+--------------------------------------------------------------------------------
+Assumptions:
+  - Daily incoming raw posts: ~500 posts/day
+  - Raw posts pruned after 7 days (capped at ~3,500 rows maximum)
+  - Net new unique jobs stored: ~250 jobs/day (with full-text search index)
+  - Average storage per job row: 11.77 KB (table data + toast + index)
+
+Horizon    | New Jobs   | Jobs Total (MB)  | Total DB (MB)  | % of 500MB Cap
+--------------------------------------------------------------------------------
+5 days     | 1250       |          31.5 MB |        43.4 MB |           8.7%
+30 days    | 7500       |         103.3 MB |       117.0 MB |          23.4%
+90 days    | 22500      |         275.8 MB |       293.8 MB |          58.8%
+--------------------------------------------------------------------------------
+
+3. CAPACITY VERDICT
+--------------------------------------------------------------------------------
+VERDICT: SAFE. At 90 days, projected database size is 293.8 MB (58.8% of the 500 MB Supabase free cap).
+The 7-day raw_posts pruning rule keeps unneeded HTML and payloads from accumulating. Jobs and GIN indexes fit comfortably within free tier limits for over 150 days.
+================================================================================

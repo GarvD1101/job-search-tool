@@ -42,6 +42,12 @@ export default async function Header() {
             >
               Stats
             </Link>
+            <Link
+              href="/costs"
+              className="text-slate-700 hover:text-sky-600 transition-colors"
+            >
+              Costs
+            </Link>
           </nav>
         </div>
 

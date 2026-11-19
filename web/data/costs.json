@@ -1,0 +1,325 @@
+{
+  "title": "Fresher Radar Cost & Scale Projections",
+  "generated_at": "2026-11-19",
+  "notes": "Figures are projections based on measured parameters and documented assumptions.",
+  "pipeline_assumptions": {
+    "survivor_rate": 0.5535,
+    "rejection_rate": 0.4465
+  },
+  "pipeline_scenarios": {
+    "200": {
+      "raw_posts_per_day": 200,
+      "tagged_posts_per_day": 110.7,
+      "survivor_share_pct": 55.35,
+      "models": {
+        "openai/gpt-oss-20b": {
+          "daily_tagged_posts": 110.7,
+          "daily_input_tokens": 24160,
+          "daily_output_tokens": 8156,
+          "daily_reasoning_tokens": 4893,
+          "daily_total_tokens": 32316,
+          "daily_cost_usd": 0.004259,
+          "weekly_cost_usd": 0.0298,
+          "monthly_cost_usd": 0.1278,
+          "annual_cost_usd": 1.5545,
+          "cost_per_1000_raw_posts_usd": 0.0213,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "openai/gpt-oss-120b": {
+          "daily_tagged_posts": 110.7,
+          "daily_input_tokens": 23825,
+          "daily_output_tokens": 8276,
+          "daily_reasoning_tokens": 5058,
+          "daily_total_tokens": 32101,
+          "daily_cost_usd": 0.008539,
+          "weekly_cost_usd": 0.0598,
+          "monthly_cost_usd": 0.2562,
+          "annual_cost_usd": 3.1169,
+          "cost_per_1000_raw_posts_usd": 0.0427,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "qwen/qwen3.8-27b": {
+          "daily_tagged_posts": 110.7,
+          "daily_input_tokens": 26268,
+          "daily_output_tokens": 6278,
+          "daily_reasoning_tokens": 0,
+          "daily_total_tokens": 32546,
+          "daily_cost_usd": 0.046126,
+          "weekly_cost_usd": 0.3229,
+          "monthly_cost_usd": 1.3838,
+          "annual_cost_usd": 16.8361,
+          "cost_per_1000_raw_posts_usd": 0.2306,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        }
+      }
+    },
+    "600": {
+      "raw_posts_per_day": 600,
+      "tagged_posts_per_day": 332.1,
+      "survivor_share_pct": 55.35,
+      "models": {
+        "openai/gpt-oss-20b": {
+          "daily_tagged_posts": 332.1,
+          "daily_input_tokens": 72481,
+          "daily_output_tokens": 24469,
+          "daily_reasoning_tokens": 14679,
+          "daily_total_tokens": 96950,
+          "daily_cost_usd": 0.012777,
+          "weekly_cost_usd": 0.0894,
+          "monthly_cost_usd": 0.3833,
+          "annual_cost_usd": 4.6635,
+          "cost_per_1000_raw_posts_usd": 0.0213,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "openai/gpt-oss-120b": {
+          "daily_tagged_posts": 332.1,
+          "daily_input_tokens": 71475,
+          "daily_output_tokens": 24828,
+          "daily_reasoning_tokens": 15174,
+          "daily_total_tokens": 96303,
+          "daily_cost_usd": 0.025618,
+          "weekly_cost_usd": 0.1793,
+          "monthly_cost_usd": 0.7685,
+          "annual_cost_usd": 9.3506,
+          "cost_per_1000_raw_posts_usd": 0.0427,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "qwen/qwen3.8-27b": {
+          "daily_tagged_posts": 332.1,
+          "daily_input_tokens": 78804,
+          "daily_output_tokens": 18833,
+          "daily_reasoning_tokens": 0,
+          "daily_total_tokens": 97637,
+          "daily_cost_usd": 0.138375,
+          "weekly_cost_usd": 0.9686,
+          "monthly_cost_usd": 4.1513,
+          "annual_cost_usd": 50.5069,
+          "cost_per_1000_raw_posts_usd": 0.2306,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        }
+      }
+    },
+    "2000": {
+      "raw_posts_per_day": 2000,
+      "tagged_posts_per_day": 1107.0,
+      "survivor_share_pct": 55.35,
+      "models": {
+        "openai/gpt-oss-20b": {
+          "daily_tagged_posts": 1107.0,
+          "daily_input_tokens": 241603,
+          "daily_output_tokens": 81564,
+          "daily_reasoning_tokens": 48929,
+          "daily_total_tokens": 323167,
+          "daily_cost_usd": 0.042589,
+          "weekly_cost_usd": 0.2981,
+          "monthly_cost_usd": 1.2777,
+          "annual_cost_usd": 15.5451,
+          "cost_per_1000_raw_posts_usd": 0.0213,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "openai/gpt-oss-120b": {
+          "daily_tagged_posts": 1107.0,
+          "daily_input_tokens": 238249,
+          "daily_output_tokens": 82759,
+          "daily_reasoning_tokens": 50579,
+          "daily_total_tokens": 321008,
+          "daily_cost_usd": 0.085393,
+          "weekly_cost_usd": 0.5977,
+          "monthly_cost_usd": 2.5618,
+          "annual_cost_usd": 31.1684,
+          "cost_per_1000_raw_posts_usd": 0.0427,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        },
+        "qwen/qwen3.8-27b": {
+          "daily_tagged_posts": 1107.0,
+          "daily_input_tokens": 262680,
+          "daily_output_tokens": 62778,
+          "daily_reasoning_tokens": 0,
+          "daily_total_tokens": 325458,
+          "daily_cost_usd": 0.461256,
+          "weekly_cost_usd": 3.2288,
+          "monthly_cost_usd": 13.8377,
+          "annual_cost_usd": 168.3584,
+          "cost_per_1000_raw_posts_usd": 0.2306,
+          "pricing_type": "published list price",
+          "source_url": "https://groq.com/pricing/",
+          "last_verified": "2026-11-19"
+        }
+      }
+    }
+  },
+  "serving_scenarios": {
+    "1000": {
+      "daily_active_users": 1000,
+      "monthly_searches": 150000,
+      "monthly_cdn_cache_hits": 120000,
+      "monthly_db_queries": 30000,
+      "monthly_bandwidth_gb": 1.43,
+      "supabase": {
+        "tier": "Free ($0/mo)",
+        "monthly_cost_usd": 0.0,
+        "plan_limit": "500 MB DB, 5 GB egress, 200 pool connections",
+        "pricing_type": "published list price",
+        "source_url": "https://supabase.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "vercel": {
+        "tier": "Hobby ($0/mo)",
+        "monthly_cost_usd": 0.0,
+        "plan_limit": "100 GB bandwidth, fair use execution",
+        "pricing_type": "published list price (non-commercial only)",
+        "basis": "Personal non-commercial projects; commercial launch requires Pro",
+        "source_url": "https://vercel.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "llm": {
+        "model": "openai/gpt-oss-20b",
+        "pipeline_volume": "600 raw posts/day",
+        "monthly_cost_usd": 0.3833,
+        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+      },
+      "breakdown_monthly_usd": {
+        "llm": 0.3833,
+        "database": 0.0,
+        "hosting": 0.0
+      },
+      "total_weekly_cost_usd": 0.09,
+      "total_monthly_cost_usd": 0.38,
+      "total_annual_cost_usd": 4.6,
+      "cost_per_1000_users_usd": 0.3833
+    },
+    "10000": {
+      "daily_active_users": 10000,
+      "monthly_searches": 1500000,
+      "monthly_cdn_cache_hits": 1200000,
+      "monthly_db_queries": 300000,
+      "monthly_bandwidth_gb": 14.31,
+      "supabase": {
+        "tier": "Pro ($25/mo)",
+        "monthly_cost_usd": 25.0,
+        "plan_limit": "8 GB DB, 250 GB egress, 10,000 pool connections",
+        "pricing_type": "published list price",
+        "source_url": "https://supabase.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "vercel": {
+        "tier": "Pro ($20/mo)",
+        "monthly_cost_usd": 20.0,
+        "plan_limit": "1 TB bandwidth, 1,000 GB-hrs serverless execution",
+        "pricing_type": "published list price",
+        "basis": "1 team seat included on Pro plan",
+        "source_url": "https://vercel.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "llm": {
+        "model": "openai/gpt-oss-20b",
+        "pipeline_volume": "600 raw posts/day",
+        "monthly_cost_usd": 0.3833,
+        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+      },
+      "breakdown_monthly_usd": {
+        "llm": 0.3833,
+        "database": 25.0,
+        "hosting": 20.0
+      },
+      "total_weekly_cost_usd": 10.59,
+      "total_monthly_cost_usd": 45.38,
+      "total_annual_cost_usd": 544.6,
+      "cost_per_1000_users_usd": 4.5383
+    },
+    "100000": {
+      "daily_active_users": 100000,
+      "monthly_searches": 15000000,
+      "monthly_cdn_cache_hits": 12000000,
+      "monthly_db_queries": 3000000,
+      "monthly_bandwidth_gb": 143.05,
+      "supabase": {
+        "tier": "Pro + Compute ($45/mo)",
+        "monthly_cost_usd": 45.0,
+        "plan_limit": "Pro ($25) + $20 Small dedicated compute upgrade",
+        "pricing_type": "published list price",
+        "source_url": "https://supabase.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "vercel": {
+        "tier": "Pro + Usage ($50/mo)",
+        "monthly_cost_usd": 50.0,
+        "plan_limit": "Pro base ($20) + $30 bandwidth/function overage",
+        "pricing_type": "published list price plus usage formula",
+        "basis": "Pro base $20/mo + $30 usage overage",
+        "source_url": "https://vercel.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "llm": {
+        "model": "openai/gpt-oss-20b",
+        "pipeline_volume": "600 raw posts/day",
+        "monthly_cost_usd": 0.3833,
+        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+      },
+      "breakdown_monthly_usd": {
+        "llm": 0.3833,
+        "database": 45.0,
+        "hosting": 50.0
+      },
+      "total_weekly_cost_usd": 22.26,
+      "total_monthly_cost_usd": 95.38,
+      "total_annual_cost_usd": 1144.6,
+      "cost_per_1000_users_usd": 0.9538
+    },
+    "1000000": {
+      "daily_active_users": 1000000,
+      "monthly_searches": 150000000,
+      "monthly_cdn_cache_hits": 120000000,
+      "monthly_db_queries": 30000000,
+      "monthly_bandwidth_gb": 1430.51,
+      "supabase": {
+        "tier": "Team ($599/mo)",
+        "monthly_cost_usd": 599.0,
+        "plan_limit": "Team tier with SLA, 16 GB DB, SOC2 compliance",
+        "pricing_type": "published list price",
+        "source_url": "https://supabase.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "vercel": {
+        "tier": "Enterprise (estimate, custom pricing: $500/mo)",
+        "monthly_cost_usd": 500.0,
+        "plan_limit": "Custom contract with multi-region CDN and enterprise SLA",
+        "pricing_type": "estimate, custom pricing",
+        "basis": "Estimated contract: 150M edge req/mo, 1.5 TB bandwidth",
+        "source_url": "https://vercel.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "llm": {
+        "model": "openai/gpt-oss-20b",
+        "pipeline_volume": "600 raw posts/day",
+        "monthly_cost_usd": 0.3833,
+        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+      },
+      "breakdown_monthly_usd": {
+        "llm": 0.3833,
+        "database": 599.0,
+        "hosting": 500.0
+      },
+      "total_weekly_cost_usd": 256.52,
+      "total_monthly_cost_usd": 1099.38,
+      "total_annual_cost_usd": 13192.6,
+      "cost_per_1000_users_usd": 1.0994
+    }
+  }
+}
