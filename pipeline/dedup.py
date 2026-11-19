@@ -234,10 +234,8 @@ class Deduplicator:
                 if dup_job.source != master_job.source:
                     stats["cross_source_duplicates"] += 1
 
-                dup_comp_norm = normalize_company(dup_job.company)
-                dup_title_norm = normalize_title(dup_job.title)
                 dup_city_norm = normalize_city(dup_job.location_text)
-                dup_key = generate_canonical_key(dup_comp_norm, dup_title_norm, dup_city_norm)
+                dup_key = f"{key}_{dup_job.source}_{dup_job.source_id}"
 
                 all_processed.append(
                     ProcessedJob(

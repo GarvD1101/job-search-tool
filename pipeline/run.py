@@ -542,15 +542,42 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Fresher Job Pipeline Runner")
     parser.add_argument(
         "--stage",
-        choices=["fetch", "filter"],
+        choices=["fetch", "filter", "tag"],
         default="fetch",
-        help="Pipeline execution stage: fetch or filter (default: fetch)",
+        help="Pipeline execution stage: fetch, filter, or tag (default: fetch)",
     )
     parser.add_argument(
+        "--model",
+        default="mock",
+        help="LLM model identifier for tagging (e.g. 'openai/gpt-oss-20b' or 'mock')",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of jobs to tag",
+    )
+    parser.add_argument(
+        "--ids-file",
+        default=None,
+        help="Path to file with target job IDs for benchmark tagging (e.g. 'eval/sample_ids.txt')",
+    )
+    parser.add_argument(
+        "--bench-out",
+        default=None,
+        help="Path to save benchmark JSON results (e.g. 'docs/results/bench_gpt-oss-20b.json')",
+    )
+    parser.add_argument(
+        "--prompt-version",
+        default="tag_v1",
+        help="Prompt template version (default: tag_v1)",
+    )
+    parser.add_argument(
+        "--sources",
         "--source",
-        choices=["all", "jooble", "greenhouse"],
+        dest="sources",
         default="all",
-        help="Source filter (default: all)",
+        help="Source filter(s): comma-separated or all (default: all)",
     )
     parser.add_argument(
         "--mode",
@@ -596,8 +623,9 @@ def main() -> int:
     config = load_sources_config(args.config)
     adapters = build_adapters(config)
 
-    if args.source != "all":
-        adapters = [a for a in adapters if a.name == args.source]
+    if args.sources != "all":
+        selected_sources = {s.strip().lower() for s in args.sources.split(",") if s.strip()}
+        adapters = [a for a in adapters if a.name in selected_sources]
 
     queries_override = None
     if args.queries:
@@ -621,6 +649,60 @@ def main() -> int:
         _, status, stats = run_filter_stage(trigger=args.trigger)
         print_filter_summary(stats)
         return 0 if status in ("success", "partial") else 1
+
+    if args.stage == "tag":
+        from pipeline.tagger import TagManager
+
+        manager = TagManager(
+            model=args.model,
+            prompt_version=args.prompt_version,
+        )
+
+        if args.ids_file and args.bench_out:
+            bench_stats = manager.run_bench_mode(
+                ids_file=args.ids_file,
+                bench_out=args.bench_out,
+            )
+            print("\n" + "=" * 60)
+            print("BENCHMARK TAGGING SUMMARY")
+            print("=" * 60)
+            print(f"Model: {bench_stats.get('model')}")
+            print(f"Prompt Version: {bench_stats.get('prompt_version')}")
+            print(f"Total Posts: {bench_stats.get('total_posts')}")
+            print(f"Valid Posts: {bench_stats.get('valid_posts')}")
+            print(f"JSON Validity Rate: {bench_stats.get('validity_rate_pct')}%")
+            print(f"Total LLM Calls: {bench_stats.get('calls_made')}")
+            tok = bench_stats.get("tokens", {})
+            print("\nToken Usage Metrics:")
+            print(f"  - Total Tokens: {tok.get('total_tokens')}")
+            print(f"  - Input Tokens: {tok.get('input_tokens')}")
+            print(f"  - Output Tokens: {tok.get('output_tokens')}")
+            print(f"  - Reasoning Tokens: {tok.get('reasoning_tokens')}")
+            print(f"  - Input Tokens per Post: {tok.get('input_per_post')}")
+            print(f"  - Output Tokens per Post: {tok.get('output_per_post')}")
+            print(f"  - Reasoning Tokens per Post: {tok.get('reasoning_per_post')}")
+            print(
+                f"  - Reasoning Share of Output: {tok.get('reasoning_share_of_output_pct')}%"
+            )
+            lat = bench_stats.get("latency", {})
+            print("\nLatency Metrics:")
+            print(f"  - Total Latency: {lat.get('total_latency_ms')} ms")
+            print(f"  - Average Latency: {lat.get('avg_latency_ms')} ms")
+            print("=" * 60 + "\n")
+            return 0
+
+        prod_stats = manager.run_production_mode(limit=args.limit)
+        print("\n" + "=" * 60)
+        print("PRODUCTION TAGGING SUMMARY")
+        print("=" * 60)
+        print(f"Model: {args.model}")
+        print(f"Status: {prod_stats.get('status')}")
+        print(f"Processed: {prod_stats.get('total_processed', 0)}")
+        print(f"Cache Hits: {prod_stats.get('cache_hits', 0)}")
+        print(f"Live Calls: {prod_stats.get('live_calls', 0)}")
+        print(f"Tokens Used Today: {prod_stats.get('tokens_used_today', 0)}")
+        print("=" * 60 + "\n")
+        return 0
 
     _, status, stats = run_fetch_stage(
         adapters=adapters,

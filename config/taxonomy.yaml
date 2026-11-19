@@ -10,9 +10,9 @@ roles:
   - sales_bd
   - customer_support
   - admin_back_office
-  - hr_recruitment
-  - finance_banking
-  - operations_logistics
+  - human_resources
+  - finance_accounting
+  - operations_supply_chain
   - content_writing
   - research
   - teaching_education
@@ -21,6 +21,30 @@ roles:
   - legal_compliance
   - hospitality_retail
   - other
+
+role_definitions:
+  software_dev: "writing or maintaining software; web, mobile and API work; programming trainees and interns."
+  data_analytics: "data or business analysis, reporting, MIS, BI, junior analysts."
+  ml_ai: "machine learning, AI, computer vision, NLP, data science modelling."
+  it_devops_security: "DevOps, cloud, system admin, network, IT support or service desk, cybersecurity, fraud or security operations."
+  qa_testing: "software testing and QA."
+  product_management: "product manager, product owner, product operations."
+  design: "UI, UX, graphic, video, fashion, product design."
+  marketing: "digital, social media, SEO, brand, content marketing, market and consumer research."
+  sales_bd: "sales, business development, inside or field sales, outbound sales calling, insurance and loan sales."
+  customer_support: "customer care, support, customer helpdesk, BPO voice or chat, inbound or service calls."
+  admin_back_office: "administration, data entry, receptionist, back office, office assistant, executive assistant, facilities."
+  human_resources: "HR, talent acquisition, recruitment, payroll, people operations."
+  finance_accounting: "accounting, audit, tax, billing, accounts payable or receivable, financial analysis."
+  operations_supply_chain: "supply chain, logistics, warehouse, process operations, coordination, general management trainees."
+  content_writing: "content, copywriting, editing, journalism, translation."
+  research: "academic, scientific or policy research, research assistants, researchers."
+  teaching_education: "teachers, tutors, faculty, trainers, school counsellors."
+  core_engineering: "mechanical, electrical, civil, chemical, electronics, architecture, manufacturing and production engineering, engineer trainees in these fields."
+  healthcare: "clinical and medical roles such as nurse, pharmacist, lab, medical coding."
+  legal_compliance: "law, company secretary, compliance, regulatory."
+  hospitality_retail: "hotel, restaurant, cafe, airline ground or cabin staff, store and retail floor roles."
+  other: "only if nothing above fits."
 
 cities:
   - bengaluru

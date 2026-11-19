@@ -415,6 +415,42 @@ def test_pay_to_join_anti_fraud_disclaimer_exempted(filter_engine: FilterRuleEng
     assert reason != "pay_to_join"
 
 
+def test_save_jobs_preserves_already_tagged_job():
+    from unittest.mock import MagicMock, patch
+
+    from pipeline.dedup import ProcessedJob
+    from pipeline.store import save_jobs
+
+    job = make_job(title="Software Engineer Intern", company="Acme")
+    pj = ProcessedJob(
+        job=job,
+        rule_decision="accept",
+        rule_reason="fresher_signal_matched",
+        canonical_key="test_canonical_key_123",
+        status="pending_tag",
+        sources=["jooble"],
+        duplicate_of=None,
+        city_or_remote="bengaluru",
+    )
+
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_conn.__enter__.return_value = mock_conn
+
+    with patch("psycopg.connect", return_value=mock_conn):
+        count = save_jobs([pj], db_url="postgresql://localhost:5432/testdb")
+        assert count == 1
+        executed_sql = mock_cursor.executemany.call_args[0][0]
+        # Verify that already tagged jobs are preserved and status is not blindly overwritten
+        assert "WHEN jobs.tag_source = 'llm'" in executed_sql
+        assert "WHEN jobs.status IN ('active', 'expired', 'needs_review')" in executed_sql
+        # Verify tagged fields (role, city, post_type, tag_source) are not overwritten
+        assert "role = EXCLUDED.role" not in executed_sql
+        assert "city = EXCLUDED.city" not in executed_sql
+        assert "post_type = EXCLUDED.post_type" not in executed_sql
+
+
 def test_html_cleaning_double_encoded_entities():
     raw_html = (
         "&amp;lt;h3&amp;gt;Company Info&amp;lt;/h3&amp;gt;"

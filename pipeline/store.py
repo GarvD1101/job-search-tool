@@ -172,8 +172,15 @@ def save_jobs(jobs_to_save: list[Any], db_url: str | None = None) -> int:
         origin_site = EXCLUDED.origin_site,
         sources = EXCLUDED.sources,
         posted_at = EXCLUDED.posted_at,
-        status = EXCLUDED.status,
-        duplicate_of = EXCLUDED.duplicate_of,
+        status = CASE
+            WHEN jobs.tag_source = 'llm' THEN jobs.status
+            WHEN jobs.status IN ('active', 'expired', 'needs_review') THEN jobs.status
+            ELSE EXCLUDED.status
+        END,
+        duplicate_of = CASE
+            WHEN jobs.status IN ('active', 'expired', 'needs_review') THEN jobs.duplicate_of
+            ELSE EXCLUDED.duplicate_of
+        END,
         rule_decision = EXCLUDED.rule_decision,
         rule_reason = EXCLUDED.rule_reason,
         last_seen_at = NOW();
@@ -208,3 +215,156 @@ def save_jobs(jobs_to_save: list[Any], db_url: str | None = None) -> int:
             safe_msg = "Database connection error (credentials masked)"
         logger.error("Failed saving jobs to database: %s", safe_msg)
         raise RuntimeError(f"Database jobs insertion failed: {safe_msg}") from None
+
+
+def record_llm_call(
+    model: str,
+    prompt_version: str,
+    batch_size: int,
+    input_tokens: int,
+    output_tokens: int,
+    reasoning_tokens: int,
+    latency_ms: int,
+    status: str = "success",
+    run_id: int | None = None,
+    db_url: str | None = None,
+) -> int | None:
+    target_url = db_url or get_db_url()
+    if not target_url:
+        return None
+
+    insert_sql = """
+    INSERT INTO llm_calls (
+        run_id, model, prompt_version, batch_size, input_tokens,
+        output_tokens, reasoning_tokens, latency_ms, status
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    RETURNING id;
+    """
+    try:
+        with psycopg.connect(target_url, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    insert_sql,
+                    (
+                        run_id,
+                        model,
+                        prompt_version,
+                        batch_size,
+                        input_tokens,
+                        output_tokens,
+                        reasoning_tokens,
+                        latency_ms,
+                        status,
+                    ),
+                )
+                row = cur.fetchone()
+                return int(row[0]) if row else None
+    except Exception as exc:
+        logger.warning("Could not record llm_call in database: %s", exc)
+        return None
+
+
+def get_today_token_usage(model: str, db_url: str | None = None) -> int:
+    target_url = db_url or get_db_url()
+    if not target_url:
+        return 0
+
+    query = """
+    SELECT COALESCE(SUM(input_tokens + output_tokens), 0)
+    FROM llm_calls
+    WHERE model = %s
+      AND created_at >= CURRENT_DATE AT TIME ZONE 'UTC';
+    """
+    try:
+        with psycopg.connect(target_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, (model,))
+                row = cur.fetchone()
+                return int(row[0]) if row else 0
+    except Exception as exc:
+        logger.warning("Could not query today's token usage from database: %s", exc)
+        return 0
+
+
+def load_pending_jobs(limit: int | None = None, db_url: str | None = None) -> list[dict[str, Any]]:
+    target_url = db_url or get_db_url()
+    if not target_url:
+        return []
+
+    query = """
+    SELECT id, canonical_key, title, company, location_text, description, url, source, posted_at
+    FROM jobs
+    WHERE status = 'pending_tag'
+    ORDER BY posted_at DESC NULLS LAST
+    """
+    if limit is not None and limit > 0:
+        query += f" LIMIT {int(limit)}"
+
+    try:
+        with psycopg.connect(target_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+                return [
+                    {
+                        "id": row[0],
+                        "canonical_key": row[1],
+                        "title": row[2],
+                        "company": row[3],
+                        "location_text": row[4],
+                        "description": row[5],
+                        "url": row[6],
+                        "source": row[7],
+                        "posted_at": row[8],
+                    }
+                    for row in rows
+                ]
+    except Exception as exc:
+        logger.error("Failed loading pending jobs: %s", exc)
+        return []
+
+
+def update_tagged_jobs(tagged_records: list[dict[str, Any]], db_url: str | None = None) -> int:
+    target_url = db_url or get_db_url()
+    if not target_url or not tagged_records:
+        return 0
+
+    update_sql = """
+    UPDATE jobs
+    SET status = %s,
+        role = %s,
+        city = %s,
+        post_type = %s,
+        is_fresher = %s,
+        is_remote = %s,
+        rule_reason = COALESCE(%s, rule_reason),
+        tag_source = %s,
+        tagger_model = %s,
+        prompt_version = %s
+    WHERE canonical_key = %s;
+    """
+    records = [
+        (
+            rec["status"],
+            rec.get("role"),
+            rec.get("city"),
+            rec.get("post_type"),
+            rec.get("is_fresher"),
+            rec.get("is_remote", False),
+            rec.get("rule_reason"),
+            rec.get("tag_source", "llm"),
+            rec.get("tagger_model"),
+            rec.get("prompt_version"),
+            rec["canonical_key"],
+        )
+        for rec in tagged_records
+    ]
+    try:
+        with psycopg.connect(target_url, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                cur.executemany(update_sql, records)
+                return len(records)
+    except Exception as exc:
+        logger.error("Failed updating tagged jobs: %s", exc)
+        raise
