@@ -215,10 +215,10 @@ export default function CostsPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-ink">
-              TABLE 02 // SERVING SCENARIOS (FULL STACK: LLM + DATABASE + HOSTING)
+              TABLE 02 // SERVING SCENARIOS WITH CDN SENSITIVITY (LLM + DATABASE + HOSTING)
             </h2>
             <span className="font-mono text-[10px] text-ink-muted">
-              CDN CACHED SERVING
+              90% BASELINE VS 50% SENSITIVITY
             </span>
           </div>
 
@@ -226,97 +226,119 @@ export default function CostsPage() {
             <table className="w-full text-left text-xs font-sans text-ink">
               <thead className="bg-canvas border-b border-grid text-ink-muted font-mono text-[11px] uppercase tracking-wider">
                 <tr>
-                  <th className="px-3.5 py-2.5 font-semibold">DAU</th>
-                  <th className="px-3.5 py-2.5 font-semibold">MONTHLY VOL</th>
-                  <th className="px-3.5 py-2.5 font-semibold">SUPABASE TIER</th>
-                  <th className="px-3.5 py-2.5 font-semibold">VERCEL TIER</th>
-                  <th className="px-3.5 py-2.5 text-right font-semibold">LLM / MO</th>
-                  <th className="px-3.5 py-2.5 text-right font-semibold">WEEKLY (7D)</th>
-                  <th className="px-3.5 py-2.5 text-right font-semibold">MONTHLY (30D)</th>
-                  <th className="px-3.5 py-2.5 text-right font-semibold">ANNUAL (365D)</th>
-                  <th className="px-3.5 py-2.5 text-right font-semibold">COST / 1K DAU</th>
+                  <th className="px-3 py-2.5 font-semibold">DAU</th>
+                  <th className="px-3 py-2.5 font-semibold">CDN CACHE</th>
+                  <th className="px-3 py-2.5 font-semibold">MONTHLY VOL</th>
+                  <th className="px-3 py-2.5 font-semibold">SUPABASE TIER & LIMIT</th>
+                  <th className="px-3 py-2.5 font-semibold">VERCEL TIER & LIMIT</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">LLM / MO</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">WEEKLY (7D)</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">MONTHLY (30D)</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">ANNUAL (365D)</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">COST / 1K DAU</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-grid/60">
                 {Object.entries(servingScenarios).map(([dauStr, sData]) => {
                   const dau = parseInt(dauStr, 10);
-                  const isCommercialBaseline = dau === 10000;
+                  const cases = [
+                    { ...sData.baseline_90_pct_cdn, label: "90% (BASE)", isBase: true },
+                    { ...sData.sensitivity_50_pct_cdn, label: "50% (SENS)", isBase: false },
+                  ];
 
-                  // Clean 2-line formatting for Supabase
-                  const supaTierLine1 = sData.supabase.tier;
-                  const supaTierLine2 = sData.supabase.plan_limit;
+                  return cases.map((c, idx) => {
+                    const isFirst = idx === 0;
+                    const isEnterprise = dau === 1000000;
 
-                  // Clean 2-line formatting for Vercel
-                  const vercelTierLine1 = sData.vercel.tier;
-                  const vercelTierLine2 = sData.vercel.basis
-                    ? `Estimate: ${sData.vercel.basis}`
-                    : sData.vercel.plan_limit;
+                    return (
+                      <tr
+                        key={`${dauStr}-${c.cdn_hit_ratio_pct}`}
+                        className={`hover:bg-surface-muted/60 transition-colors ${
+                          c.isBase ? "bg-canvas/30" : ""
+                        }`}
+                      >
+                        <td className="px-3 py-2.5 font-mono font-bold text-ink text-xs tabular-nums">
+                          {isFirst ? dau.toLocaleString() : ""}
+                        </td>
 
-                  return (
-                    <tr
-                      key={dauStr}
-                      className={`hover:bg-surface-muted/60 transition-colors ${
-                        isCommercialBaseline ? "bg-canvas/50" : ""
-                      }`}
-                    >
-                      <td className="px-3.5 py-3 font-mono font-bold text-ink text-xs tabular-nums">
-                        {dau.toLocaleString()}
-                      </td>
+                        <td className="px-3 py-2.5 font-mono text-[11px]">
+                          <span
+                            className={`px-1.5 py-0.5 border text-[10px] font-semibold ${
+                              c.isBase
+                                ? "bg-status-live/10 border-status-live/30 text-status-live"
+                                : "bg-amber-wash border-amber-signal/30 text-amber-signal"
+                            }`}
+                          >
+                            {c.label}
+                          </span>
+                        </td>
 
-                      <td className="px-3.5 py-3 font-mono text-[11px] text-ink-secondary tabular-nums">
-                        <span>{(sData.monthly_searches / 1_000_000).toFixed(1)}M req</span>
-                        <span className="block text-ink-muted text-[10px]">
-                          {sData.monthly_bandwidth_gb} GB egress
-                        </span>
-                      </td>
+                        <td className="px-3 py-2.5 font-mono text-[11px] text-ink-secondary tabular-nums">
+                          <span>{(c.monthly_searches / 1_000_000).toFixed(1)}M req</span>
+                          <span className="block text-ink-muted text-[10px]">
+                            {c.monthly_origin_requests ? `${(c.monthly_origin_requests / 1_000).toLocaleString()}k origin` : ""} · {c.monthly_bandwidth_gb} GB
+                          </span>
+                        </td>
 
-                      <td className="px-3.5 py-3">
-                        <span className="font-mono font-semibold text-ink text-xs block truncate">
-                          {supaTierLine1}
-                        </span>
-                        <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5">
-                          {supaTierLine2}
-                        </span>
-                      </td>
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono font-semibold text-ink text-xs block truncate">
+                            {c.supabase.tier}
+                          </span>
+                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[220px]">
+                            {c.supabase.binding_limit}
+                          </span>
+                        </td>
 
-                      <td className="px-3.5 py-3">
-                        <span className="font-mono font-semibold text-ink text-xs block truncate">
-                          {vercelTierLine1}
-                        </span>
-                        <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[200px]">
-                          {vercelTierLine2}
-                        </span>
-                      </td>
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono font-semibold text-ink text-xs block truncate">
+                            {c.vercel.tier}
+                          </span>
+                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[220px]">
+                            {c.vercel.binding_limit}
+                          </span>
+                        </td>
 
-                      <td className="px-3.5 py-3 text-right font-mono tabular-nums whitespace-nowrap text-ink-muted">
-                        {formatUsd(sData.breakdown_monthly_usd.llm, 2)}
-                      </td>
-                      <td className="px-3.5 py-3 text-right font-mono tabular-nums whitespace-nowrap text-ink">
-                        {formatUsd(sData.total_weekly_cost_usd, 2)}
-                      </td>
-                      <td className="px-3.5 py-3 text-right font-mono tabular-nums whitespace-nowrap font-bold text-ink">
-                        {formatUsd(sData.total_monthly_cost_usd, 2)}
-                      </td>
-                      <td className="px-3.5 py-3 text-right font-mono tabular-nums whitespace-nowrap font-semibold text-ink">
-                        {formatUsd(sData.total_annual_cost_usd, 2)}
-                      </td>
-                      <td className="px-3.5 py-3 text-right font-mono tabular-nums whitespace-nowrap font-bold text-amber-signal">
-                        {formatUsd(sData.cost_per_1000_users_usd, 4)}
-                      </td>
-                    </tr>
-                  );
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap text-ink-muted">
+                          {formatUsd(c.breakdown_monthly_usd.llm, 2)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap text-ink">
+                          {c.total_weekly_cost_usd !== null
+                            ? formatUsd(c.total_weekly_cost_usd, 2)
+                            : "contact sales"}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-bold text-ink">
+                          {c.total_monthly_cost_usd !== null
+                            ? formatUsd(c.total_monthly_cost_usd, 2)
+                            : "contact sales"}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-semibold text-ink">
+                          {c.total_annual_cost_usd !== null
+                            ? formatUsd(c.total_annual_cost_usd, 2)
+                            : "contact sales"}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-bold text-amber-signal">
+                          {c.cost_per_1000_users_usd !== null
+                            ? formatUsd(c.cost_per_1000_users_usd, 4)
+                            : "contact sales"}
+                        </td>
+                      </tr>
+                    );
+                  });
                 })}
               </tbody>
             </table>
           </div>
 
           {/* Commercial Deployment Callout */}
-          <div className="bg-canvas border border-grid p-3.5 font-mono text-xs text-ink-secondary space-y-1">
+          <div className="bg-canvas border border-grid p-3.5 font-mono text-xs text-ink-secondary space-y-1.5">
             <span className="font-bold text-ink uppercase tracking-wider block text-[11px]">
-              COMMERCIAL DEPLOYMENT NOTE
+              COMMERCIAL DEPLOYMENT AND 10K CASE EXPLANATION
             </span>
             <p className="text-[11px] leading-relaxed font-sans">
-              Vercel Hobby is strictly restricted to personal, non-commercial use. Commercial launch assumes Vercel Pro ($20/seat/mo) and Supabase Pro ($25/mo), establishing a baseline operating floor of $45.00/mo.
+              <strong>Why the 10k case changed from ~$45 to $20/month:</strong> In pure resource-consumption accounting, 10,000 DAU at 90% CDN cache hit ratio generates only 150,000 origin queries (1.43 GB egress/mo). Because Supabase Free includes 5.0 GB egress and 500 MB DB storage at $0/mo, strict resource billing incurs $0 for the database and $20/mo for Vercel Pro ($20.00/mo total). However, Supabase Free pauses after one week of inactivity and enforces a 200 connection ceiling. A production launch requires Supabase Pro ($25/mo), establishing the commercial production floor at $45.00/mo ($20 Vercel Pro + $25 Supabase Pro).
+            </p>
+            <p className="text-[11px] leading-relaxed font-sans text-ink-muted">
+              At 1,000,000 users, monthly traffic (150M edge requests, 15M to 75M origin function calls, 1.43 TB bandwidth) exceeds published self-serve limits, requiring custom Enterprise contracts with no invented numbers.
             </p>
           </div>
         </div>
@@ -369,7 +391,7 @@ export default function CostsPage() {
                 </a>
               </div>
               <p className="text-[11px] text-ink-secondary font-sans mt-2 leading-relaxed">
-                Free: $0/mo (500 MB DB, 5 GB egress, 200 pool connections). Pro: $25/mo (8 GB DB, 250 GB egress, 10,000 pool connections). Team: $599/mo (16 GB DB, SOC2).
+                Free: $0/mo (500 MB DB, 5 GB egress, 200 pool connections, non-commercial). Pro: $25/mo (8 GB DB, 250 GB egress, 10,000 pool connections). Enterprise: custom contract (contact sales).
               </p>
             </div>
             <div className="pt-2 border-t border-grid/60 text-[10px] text-ink-muted">
@@ -393,7 +415,7 @@ export default function CostsPage() {
                 </a>
               </div>
               <p className="text-[11px] text-ink-secondary font-sans mt-2 leading-relaxed">
-                Hobby: $0/mo (100 GB BW, personal only). Pro: $20/seat/mo (1 TB BW, commercial). Enterprise: Custom quote (contract estimate: $500/mo for 150M edge req, 1.5 TB BW, SLA).
+                Hobby: $0/mo (100 GB BW, personal use only). Pro: $20/seat/mo (10M edge requests, 1M function invocations, 1 TB bandwidth). Enterprise: custom contract (contact sales, required beyond self-serve thresholds).
               </p>
             </div>
             <div className="pt-2 border-t border-grid/60 text-[10px] text-ink-muted">

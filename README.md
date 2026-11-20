@@ -1,6 +1,6 @@
 # Fresher Radar
 
-Live Application: [LIVE_URL](LIVE_URL)
+Live Application: [https://job-search-tool-rho.vercel.app/](https://job-search-tool-rho.vercel.app/)
 
 Fresher Radar collects real entry-level job and internship posts for Indian graduates from public sources.
 It rejects non-fresher listings with deterministic rules, tags role and city using an LLM, and eliminates duplicate postings.
@@ -60,14 +60,14 @@ flowchart TD
 | Metric | Measured Value | Benchmark Details | Source File / Endpoint |
 |---|---|---|---|
 | **Active Jobs Ingested** | 361 active posts (1,489 total) | 200+ target met across Jooble API and 32 Greenhouse boards | `/stats` and `docs/submission/jobs.csv` |
-| **Tagging Accuracy** | Role: 71.4% strict (83.7% role-family)<br>City: 94.0%<br>Fresher Agreement: 100.0% | Hand-evaluated against 50 blind-labeled human ground-truth posts (n=49 for role, row 36 excluded) | `docs/results/score_gpt-oss-20b_v4.txt` and `docs/submission/eval_labels_vs_model.csv` |
+| **Tagging Accuracy** | Role: 71.4% strict (83.7% role-family)<br>City: 94.0%<br>Fresher Agreement: 48 of 48 agreed on the labeled posts; only 4 were non-fresher, and all were caught | Hand-evaluated against 50 blind-labeled human ground-truth posts (n=49 for role, row 36 excluded) | `docs/results/score_gpt-oss-20b_v4.txt` and `docs/submission/eval_labels_vs_model.csv` |
 | **Cost per 1,000 Posts** | $0.00 actual spend<br>($0.0213 per 1k raw posts at list price) | Computed from logged tokens and official Groq list prices ($0.075 / $0.30 per 1M tokens) | `docs/results/costs.json` and `docs/submission/costs.csv` |
 
 ## Pipeline Stages
 
 1. **Ingest and Normalize**: Adapters pull postings from Jooble API and public Greenhouse company boards within daily rate limits. Raw payloads are saved in `raw_posts`. Descriptions are stripped of recruiter contact numbers, personal emails, and HTML tags.
 2. **Rules Filter**: Deterministic pattern matching rejects posts requiring 2+ years of experience, posts outside India, and commercial non-job listings (training courses, admission notices, paid workshops).
-   *Why rules run before the LLM*: 44.65% of raw posts are rejected by rules before touching the LLM. Running cheap regular expressions first cuts LLM API costs by nearly half and prevents unnecessary token quota consumption.
+   *Why rules run before the LLM*: 44.65% of raw posts are rejected by rules before touching the LLM. Running cheap regular expressions first cuts LLM volume by about 45% and prevents unnecessary token quota consumption.
 3. **LLM Tagging**: Surviving posts are tagged in batches of 10 using Groq (`openai/gpt-oss-20b`). Prompts enforce strict Pydantic JSON validation against canonical role and city enums.
 4. **Deduplication**: Posts are matched across sources using exact title-company-city keys, followed by 3-shingle Jaccard fuzzy similarity on descriptions. Duplicates link to the primary canonical post through `duplicate_of`.
 5. **Expiration Engine**: Jobs not seen in upstream sources for 14 days, or postings older than 45 days, are automatically marked as `expired`.
@@ -82,7 +82,7 @@ Total Evaluated: 50 posts
 Role Accuracy: 71.4% strict (35/49, n=49)
 Role-Family Accuracy: 83.7% (41/49, n=49)
 City Accuracy: 94.0% (47/50, n=50)
-Fresher Agreement: 100.0% (48/48, n=48)
+Fresher Agreement: 48 of 48 agreed on the labeled posts; only 4 were non-fresher, and all were caught (48/48, n=48)
 Invalid Enums: 0 (100% enum adherence)
 ```
 
@@ -207,6 +207,7 @@ The pipeline's real-time ingestion throughput is constrained by Groq free-tier r
 
 ## Limitations and Future Work
 
+- **Jooble Listing Timestamps**: Jooble's updated field is the listing's last update, not necessarily its posting date.
 - **ATS Expansion**: Greenhouse currently covers 32 companies. Adding Lever and Ashby public APIs will increase direct employer coverage.
 - **Salary Detection**: Aggregator salary descriptions are frequently missing or noisy; adding structured salary parsing for entry-level compensation brackets is planned.
 - **Location Disambiguation**: Edge cases for multi-city regional posts or NCR satellites (Noida/Gurugram) can be enhanced with granular PIN-code mapping.

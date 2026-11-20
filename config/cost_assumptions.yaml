@@ -51,10 +51,10 @@ pipeline_volume_scenarios:
 
 serving_traffic_assumptions:
   searches_per_user_day: 5
-  cdn_cache_hit_rate: 0.80
-  db_query_rate: 0.20 # 20% reach Postgres via transaction pooler
+  cdn_cache_hit_rate_baseline: 0.90
+  cdn_cache_hit_rate_sensitivity: 0.50
   avg_response_payload_kb: 10
-  commercial_note: "Vercel Hobby is personal use only. Commercial launches require Pro tier."
+  commercial_note: "Vercel Hobby and Supabase Free are for personal, non-commercial use only. Commercial launches require Pro tiers."
 
 serving_pricing_tiers:
   supabase:
@@ -63,25 +63,28 @@ serving_pricing_tiers:
     tiers:
       free:
         price_per_month: 0.0
-        pricing_type: "published list price"
+        pricing_type: "published list price (non-commercial only)"
         max_db_size_mb: 500
         max_egress_gb_per_month: 5.0
         max_connections: 200
         suitable_up_to_dau: 1000
+        note: "Pauses after 1 week inactivity. Free tier egress covers 10k users at 90% CDN, but lacks commercial SLA."
       pro:
         price_per_month: 25.0
         pricing_type: "published list price"
         included_db_size_gb: 8.0
         included_egress_gb_per_month: 250.0
+        egress_overage_per_gb: 0.09
         max_connections: 10000
         suitable_up_to_dau: 50000
-      pro_with_compute:
-        price_per_month: 45.0 # $25 base + $20 Small compute addon
+      pro_with_medium_compute:
+        price_per_month: 85.0 # $25 base + $60 Medium compute addon
         pricing_type: "published list price"
         included_db_size_gb: 8.0
         included_egress_gb_per_month: 250.0
         max_connections: 10000
-        suitable_up_to_dau: 200000
+        suitable_up_to_dau: 100000
+        note: "Required when 50% CDN hit ratio generates 7.5M origin queries/month."
       team:
         price_per_month: 599.0
         pricing_type: "published list price"
@@ -89,6 +92,10 @@ serving_pricing_tiers:
         included_egress_gb_per_month: 250.0
         max_connections: 10000
         suitable_up_to_dau: 1000000
+      enterprise:
+        price_per_month: null
+        pricing_type: "contact sales"
+        note: "Custom enterprise contract required for high-throughput multi-region clusters."
 
   vercel:
     source_url: "https://vercel.com/pricing"
@@ -96,23 +103,21 @@ serving_pricing_tiers:
     tiers:
       hobby:
         price_per_month: 0.0
-        pricing_type: "published list price (non-commercial)"
+        pricing_type: "published list price (non-commercial only)"
         included_bandwidth_gb_per_month: 100.0
         suitable_up_to_dau: 1000
-        note: "Personal and hobby projects only; not licensed for commercial production."
+        note: "Personal projects only. Not licensed for commercial production."
       pro:
         price_per_month: 20.0 # 1 team seat
         pricing_type: "published list price"
-        included_bandwidth_tb_per_month: 1.0
-        suitable_up_to_dau: 100000
-      pro_scale:
-        price_per_month: 50.0 # $20 base + $30 usage/bandwidth overage
-        pricing_type: "published list price plus usage formula"
-        included_bandwidth_tb_per_month: 1.5
-        suitable_up_to_dau: 250000
+        included_edge_requests: 10000000 # 10M
+        included_function_invocations: 1000000 # 1M
+        included_bandwidth_tb_per_month: 1.0 # 1 TB
+        edge_request_overage_per_1m: 2.00
+        function_invocation_overage_per_1m: 0.40
+        bandwidth_overage_per_gb: 0.15
+        suitable_up_to_dau: 50000
       enterprise:
-        price_per_month: 500.0
-        pricing_type: "estimate, custom pricing"
-        basis: "Estimated enterprise contract for 150M edge requests/mo, 1.5 TB bandwidth, and custom SLA"
-        included_bandwidth_tb_per_month: 5.0
-        suitable_up_to_dau: 1000000
+        price_per_month: null
+        pricing_type: "contact sales"
+        note: "Custom contract required beyond self-serve thresholds (>10M edge requests or custom SLA)."

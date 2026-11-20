@@ -15,13 +15,20 @@ interface PipelineScenarioData {
 interface ServingScenarioData {
   daily_active_users?: number;
   dau?: number;
-  supabase?: { tier: string; monthly_cost_usd?: number };
-  vercel?: { tier: string; monthly_cost_usd?: number };
+  supabase?: { tier: string; monthly_cost_usd?: number | null };
+  vercel?: { tier: string; monthly_cost_usd?: number | null };
   breakdown_monthly_usd?: {
-    llm?: number;
-    supabase?: number;
-    vercel?: number;
+    llm?: number | null;
+    supabase?: number | null;
+    vercel?: number | null;
+    database?: number | null;
+    hosting?: number | null;
   };
+  total_weekly_cost_usd?: number | null;
+  total_monthly_cost_usd?: number | null;
+  total_annual_cost_usd?: number | null;
+  cost_per_1000_users_usd?: number | null;
+  [key: string]: unknown;
 }
 
 interface CostSimulatorProps {
@@ -41,17 +48,28 @@ export default function CostSimulator({
   const pipelineData = pipelineScenarios[selectedVolume]?.models[selectedModel];
   const servingData = servingScenarios[selectedDau];
 
+  const isEnterprise = selectedDau === "1000000";
   const llmMonthly = pipelineData?.monthly_cost_usd || 0;
-  const supabaseMonthly = servingData?.breakdown_monthly_usd?.supabase || 0;
-  const vercelMonthly = servingData?.breakdown_monthly_usd?.vercel || 0;
-  const infraMonthly = supabaseMonthly + vercelMonthly;
+  const supabaseMonthly = servingData?.breakdown_monthly_usd?.supabase;
+  const vercelMonthly = servingData?.breakdown_monthly_usd?.vercel;
+  const infraMonthly =
+    !isEnterprise &&
+    typeof supabaseMonthly === "number" &&
+    typeof vercelMonthly === "number"
+      ? supabaseMonthly + vercelMonthly
+      : null;
 
-  const totalMonthly = llmMonthly + infraMonthly;
-  const totalAnnual = totalMonthly * 12;
+  const totalMonthly =
+    infraMonthly !== null ? llmMonthly + infraMonthly : null;
+  const totalAnnual = totalMonthly !== null ? totalMonthly * 12 : null;
   const dauNum = parseInt(selectedDau, 10) || 1;
-  const costPer1kDau = (totalMonthly / dauNum) * 1000;
+  const costPer1kDau =
+    totalMonthly !== null ? (totalMonthly / dauNum) * 1000 : null;
 
-  const llmSharePct = totalMonthly > 0 ? (llmMonthly / totalMonthly) * 100 : 0;
+  const llmSharePct =
+    totalMonthly !== null && totalMonthly > 0
+      ? (llmMonthly / totalMonthly) * 100
+      : 0;
   const infraSharePct = 100 - llmSharePct;
 
   return (
@@ -67,8 +85,8 @@ export default function CostSimulator({
             {[
               { key: "1000", label: "1K" },
               { key: "10000", label: "10K" },
-              { key: "50000", label: "50K" },
-              { key: "250000", label: "250K" },
+              { key: "100000", label: "100K" },
+              { key: "1000000", label: "1M" },
             ].map((t) => (
               <button
                 key={t.key}
@@ -149,7 +167,7 @@ export default function CostSimulator({
               MONTHLY TOTAL
             </span>
             <span className="text-2xl sm:text-3xl font-bold text-ink block mt-0.5 tabular-nums">
-              {formatUsd(totalMonthly)}
+              {totalMonthly !== null ? formatUsd(totalMonthly) : "Contact Sales"}
             </span>
             <span className="text-[10px] text-ink-muted block mt-0.5 font-sans">
               LLM + DB + Hosting
@@ -161,7 +179,7 @@ export default function CostSimulator({
               ANNUAL TOTAL
             </span>
             <span className="text-2xl sm:text-3xl font-bold text-ink block mt-0.5 tabular-nums">
-              {formatUsd(totalAnnual)}
+              {totalAnnual !== null ? formatUsd(totalAnnual) : "Contact Sales"}
             </span>
             <span className="text-[10px] text-ink-muted block mt-0.5 font-sans">
               12-month projection
@@ -176,7 +194,12 @@ export default function CostSimulator({
               {formatUsd(llmMonthly)}
             </span>
             <span className="text-[10px] text-ink-muted block mt-0.5 font-sans">
-              {llmSharePct < 0.1 ? "< 0.1%" : `${llmSharePct.toFixed(1)}%`} of total spend
+              {totalMonthly !== null
+                ? llmSharePct < 0.1
+                  ? "< 0.1%"
+                  : `${llmSharePct.toFixed(1)}%`
+                : "< 0.01%"}{" "}
+              of total spend
             </span>
           </div>
 
@@ -185,7 +208,7 @@ export default function CostSimulator({
               COST / 1K DAU
             </span>
             <span className="text-2xl sm:text-3xl font-bold text-ink block mt-0.5 tabular-nums">
-              {formatUsd(costPer1kDau, 4)}
+              {costPer1kDau !== null ? formatUsd(costPer1kDau, 4) : "Custom"}
             </span>
             <span className="text-[10px] text-ink-muted block mt-0.5 font-sans">
               Unit serving efficiency
@@ -197,23 +220,43 @@ export default function CostSimulator({
         <div className="space-y-1.5 pt-2 border-t border-grid/60 font-mono text-xs">
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-amber-signal font-semibold">
-              LLM TAGGING: {formatUsd(llmMonthly)} ({llmSharePct < 0.1 ? "<0.1%" : `${llmSharePct.toFixed(1)}%`})
+              LLM TAGGING: {formatUsd(llmMonthly)}{" "}
+              {totalMonthly !== null
+                ? `(${llmSharePct < 0.1 ? "<0.1%" : `${llmSharePct.toFixed(1)}%`})`
+                : ""}
             </span>
             <span className="text-ink font-semibold">
-              INFRASTRUCTURE: {formatUsd(infraMonthly)} ({infraSharePct > 99.9 ? ">99.9%" : `${infraSharePct.toFixed(1)}%`})
+              INFRASTRUCTURE:{" "}
+              {infraMonthly !== null
+                ? `${formatUsd(infraMonthly)} (${
+                    infraSharePct > 99.9 ? ">99.9%" : `${infraSharePct.toFixed(1)}%`
+                  })`
+                : "Contact Sales (Enterprise SLA)"}
             </span>
           </div>
 
           <div className="h-4 w-full flex bg-canvas border border-grid rounded-[1px] overflow-hidden">
             <div
-              style={{ width: `${Math.max(llmSharePct, 0.75)}%` }}
+              style={{
+                width: `${
+                  isEnterprise ? 1 : Math.max(llmSharePct, 0.75)
+                }%`,
+              }}
               className="bg-amber-signal h-full transition-all"
               title={`LLM Share: ${formatUsd(llmMonthly)}`}
             />
             <div
-              style={{ width: `${Math.min(infraSharePct, 99.25)}%` }}
+              style={{
+                width: `${
+                  isEnterprise ? 99 : Math.min(infraSharePct, 99.25)
+                }%`,
+              }}
               className="bg-ink h-full transition-all"
-              title={`Infra Share: ${formatUsd(infraMonthly)}`}
+              title={
+                infraMonthly !== null
+                  ? `Infra Share: ${formatUsd(infraMonthly)}`
+                  : "Enterprise Contract"
+              }
             />
           </div>
         </div>

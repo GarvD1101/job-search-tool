@@ -16,18 +16,18 @@ interface JobRowProps {
 }
 
 function formatRecency(iso: string | null): { text: string; isToday: boolean } {
-  if (!iso) return { text: "Recent", isToday: false };
+  if (!iso) return { text: "Updated recently", isToday: false };
   const date = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor(
     (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  if (diffDays <= 0) return { text: "Today", isToday: true };
-  if (diffDays === 1) return { text: "1d ago", isToday: false };
-  if (diffDays < 30) return { text: `${diffDays}d ago`, isToday: false };
+  if (diffDays <= 0) return { text: "Updated Today", isToday: true };
+  if (diffDays === 1) return { text: "Updated 1d ago", isToday: false };
+  if (diffDays < 30) return { text: `Updated ${diffDays}d ago`, isToday: false };
   return {
-    text: date.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+    text: `Updated ${date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
     isToday: false,
   };
 }

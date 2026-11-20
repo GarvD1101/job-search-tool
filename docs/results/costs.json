@@ -1,7 +1,7 @@
 {
   "title": "Fresher Radar Cost & Scale Projections",
-  "generated_at": "2026-11-19",
-  "notes": "Figures are projections based on measured parameters and documented assumptions.",
+  "generated_at": "2026-11-20",
+  "notes": "Projections derived from official pricing pages and measured pipeline parameters.",
   "pipeline_assumptions": {
     "survivor_rate": 0.5535,
     "rejection_rate": 0.4465
@@ -168,52 +168,89 @@
     "1000": {
       "daily_active_users": 1000,
       "monthly_searches": 150000,
-      "monthly_cdn_cache_hits": 120000,
-      "monthly_db_queries": 30000,
       "monthly_bandwidth_gb": 1.43,
-      "supabase": {
-        "tier": "Free ($0/mo)",
-        "monthly_cost_usd": 0.0,
-        "plan_limit": "500 MB DB, 5 GB egress, 200 pool connections",
-        "pricing_type": "published list price",
-        "source_url": "https://supabase.com/pricing",
-        "last_verified": "2026-11-19"
+      "baseline_90_pct_cdn": {
+        "cdn_hit_ratio_pct": 90,
+        "monthly_searches": 150000,
+        "monthly_cdn_cache_hits": 135000,
+        "monthly_origin_requests": 15000,
+        "monthly_bandwidth_gb": 1.43,
+        "monthly_origin_egress_gb": 0.14,
+        "supabase": {
+          "tier": "Pro ($25/mo)",
+          "monthly_cost_usd": 25.0,
+          "binding_limit": "Base Pro subscription (Free covers 1.43 GB egress, lacks commercial SLA)",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro ($20/mo)",
+          "monthly_cost_usd": 20.0,
+          "binding_limit": "Base 1-seat Pro subscription",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 25.0,
+          "hosting": 20.0
+        },
+        "total_weekly_cost_usd": 10.59,
+        "total_monthly_cost_usd": 45.38,
+        "total_annual_cost_usd": 544.56,
+        "cost_per_1000_users_usd": 45.38
       },
-      "vercel": {
-        "tier": "Hobby ($0/mo)",
-        "monthly_cost_usd": 0.0,
-        "plan_limit": "100 GB bandwidth, fair use execution",
-        "pricing_type": "published list price (non-commercial only)",
-        "basis": "Personal non-commercial projects; commercial launch requires Pro",
-        "source_url": "https://vercel.com/pricing",
-        "last_verified": "2026-11-19"
+      "sensitivity_50_pct_cdn": {
+        "cdn_hit_ratio_pct": 50,
+        "monthly_searches": 150000,
+        "monthly_cdn_cache_hits": 75000,
+        "monthly_origin_requests": 75000,
+        "monthly_bandwidth_gb": 1.43,
+        "monthly_origin_egress_gb": 0.72,
+        "supabase": {
+          "tier": "Pro ($25/mo)",
+          "monthly_cost_usd": 25.0,
+          "binding_limit": "Base Pro subscription (Free covers 1.43 GB egress, lacks commercial SLA)",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro ($20/mo)",
+          "monthly_cost_usd": 20.0,
+          "binding_limit": "Base 1-seat Pro subscription",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 25.0,
+          "hosting": 20.0
+        },
+        "total_weekly_cost_usd": 10.59,
+        "total_monthly_cost_usd": 45.38,
+        "total_annual_cost_usd": 544.56,
+        "cost_per_1000_users_usd": 45.38
       },
-      "llm": {
-        "model": "openai/gpt-oss-20b",
-        "pipeline_volume": "600 raw posts/day",
-        "monthly_cost_usd": 0.3833,
-        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
-      },
-      "breakdown_monthly_usd": {
-        "llm": 0.3833,
-        "database": 0.0,
-        "hosting": 0.0
-      },
-      "total_weekly_cost_usd": 0.09,
-      "total_monthly_cost_usd": 0.38,
-      "total_annual_cost_usd": 4.6,
-      "cost_per_1000_users_usd": 0.3833
-    },
-    "10000": {
-      "daily_active_users": 10000,
-      "monthly_searches": 1500000,
-      "monthly_cdn_cache_hits": 1200000,
-      "monthly_db_queries": 300000,
-      "monthly_bandwidth_gb": 14.31,
       "supabase": {
         "tier": "Pro ($25/mo)",
         "monthly_cost_usd": 25.0,
-        "plan_limit": "8 GB DB, 250 GB egress, 10,000 pool connections",
+        "binding_limit": "Base Pro subscription (Free covers 1.43 GB egress, lacks commercial SLA)",
         "pricing_type": "published list price",
         "source_url": "https://supabase.com/pricing",
         "last_verified": "2026-11-19"
@@ -221,9 +258,8 @@
       "vercel": {
         "tier": "Pro ($20/mo)",
         "monthly_cost_usd": 20.0,
-        "plan_limit": "1 TB bandwidth, 1,000 GB-hrs serverless execution",
+        "binding_limit": "Base 1-seat Pro subscription",
         "pricing_type": "published list price",
-        "basis": "1 team seat included on Pro plan",
         "source_url": "https://vercel.com/pricing",
         "last_verified": "2026-11-19"
       },
@@ -231,7 +267,7 @@
         "model": "openai/gpt-oss-20b",
         "pipeline_volume": "600 raw posts/day",
         "monthly_cost_usd": 0.3833,
-        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+        "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
       },
       "breakdown_monthly_usd": {
         "llm": 0.3833,
@@ -240,29 +276,218 @@
       },
       "total_weekly_cost_usd": 10.59,
       "total_monthly_cost_usd": 45.38,
-      "total_annual_cost_usd": 544.6,
-      "cost_per_1000_users_usd": 4.5383
+      "total_annual_cost_usd": 544.56,
+      "cost_per_1000_users_usd": 45.38
+    },
+    "10000": {
+      "daily_active_users": 10000,
+      "monthly_searches": 1500000,
+      "monthly_bandwidth_gb": 14.31,
+      "baseline_90_pct_cdn": {
+        "cdn_hit_ratio_pct": 90,
+        "monthly_searches": 1500000,
+        "monthly_cdn_cache_hits": 1350000,
+        "monthly_origin_requests": 150000,
+        "monthly_bandwidth_gb": 14.31,
+        "monthly_origin_egress_gb": 1.43,
+        "supabase": {
+          "tier": "Pro ($25/mo)",
+          "monthly_cost_usd": 25.0,
+          "binding_limit": "Base Pro subscription (Free covers 1.43 GB egress, lacks SLA/pausing protection)",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro ($20/mo)",
+          "monthly_cost_usd": 20.0,
+          "binding_limit": "Base 1-seat Pro subscription",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 25.0,
+          "hosting": 20.0
+        },
+        "total_weekly_cost_usd": 10.59,
+        "total_monthly_cost_usd": 45.38,
+        "total_annual_cost_usd": 544.56,
+        "cost_per_1000_users_usd": 4.538
+      },
+      "sensitivity_50_pct_cdn": {
+        "cdn_hit_ratio_pct": 50,
+        "monthly_searches": 1500000,
+        "monthly_cdn_cache_hits": 750000,
+        "monthly_origin_requests": 750000,
+        "monthly_bandwidth_gb": 14.31,
+        "monthly_origin_egress_gb": 7.15,
+        "supabase": {
+          "tier": "Pro ($25/mo)",
+          "monthly_cost_usd": 25.0,
+          "binding_limit": "Egress (7.15 GB) exceeds 5 GB Free tier cap; mandates Pro tier",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro ($20/mo)",
+          "monthly_cost_usd": 20.0,
+          "binding_limit": "Function Invocations (750k / 1M allowance)",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 25.0,
+          "hosting": 20.0
+        },
+        "total_weekly_cost_usd": 10.59,
+        "total_monthly_cost_usd": 45.38,
+        "total_annual_cost_usd": 544.56,
+        "cost_per_1000_users_usd": 4.538
+      },
+      "supabase": {
+        "tier": "Pro ($25/mo)",
+        "monthly_cost_usd": 25.0,
+        "binding_limit": "Base Pro subscription (Free covers 1.43 GB egress, lacks SLA/pausing protection)",
+        "pricing_type": "published list price",
+        "source_url": "https://supabase.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "vercel": {
+        "tier": "Pro ($20/mo)",
+        "monthly_cost_usd": 20.0,
+        "binding_limit": "Base 1-seat Pro subscription",
+        "pricing_type": "published list price",
+        "source_url": "https://vercel.com/pricing",
+        "last_verified": "2026-11-19"
+      },
+      "llm": {
+        "model": "openai/gpt-oss-20b",
+        "pipeline_volume": "600 raw posts/day",
+        "monthly_cost_usd": 0.3833,
+        "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+      },
+      "breakdown_monthly_usd": {
+        "llm": 0.3833,
+        "database": 25.0,
+        "hosting": 20.0
+      },
+      "total_weekly_cost_usd": 10.59,
+      "total_monthly_cost_usd": 45.38,
+      "total_annual_cost_usd": 544.56,
+      "cost_per_1000_users_usd": 4.538
     },
     "100000": {
       "daily_active_users": 100000,
       "monthly_searches": 15000000,
-      "monthly_cdn_cache_hits": 12000000,
-      "monthly_db_queries": 3000000,
       "monthly_bandwidth_gb": 143.05,
+      "baseline_90_pct_cdn": {
+        "cdn_hit_ratio_pct": 90,
+        "monthly_searches": 15000000,
+        "monthly_cdn_cache_hits": 13500000,
+        "monthly_origin_requests": 1500000,
+        "monthly_bandwidth_gb": 143.05,
+        "monthly_origin_egress_gb": 14.31,
+        "supabase": {
+          "tier": "Pro ($25/mo)",
+          "monthly_cost_usd": 25.0,
+          "binding_limit": "Connection pooler concurrency (1.5M queries/mo)",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro + Usage ($30.20/mo)",
+          "monthly_cost_usd": 30.2,
+          "binding_limit": "Edge Requests (15M > 10M included); Function Invocations (1.50M > 1M included)",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 25.0,
+          "hosting": 30.2
+        },
+        "total_weekly_cost_usd": 12.97,
+        "total_monthly_cost_usd": 55.58,
+        "total_annual_cost_usd": 666.96,
+        "cost_per_1000_users_usd": 0.5558
+      },
+      "sensitivity_50_pct_cdn": {
+        "cdn_hit_ratio_pct": 50,
+        "monthly_searches": 15000000,
+        "monthly_cdn_cache_hits": 7500000,
+        "monthly_origin_requests": 7500000,
+        "monthly_bandwidth_gb": 143.05,
+        "monthly_origin_egress_gb": 71.53,
+        "supabase": {
+          "tier": "Pro + Medium Compute ($85/mo)",
+          "monthly_cost_usd": 85.0,
+          "binding_limit": "Postgres compute RAM and connection pooler throughput (7.5M queries/mo)",
+          "pricing_type": "published list price",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Pro + Usage ($32.60/mo)",
+          "monthly_cost_usd": 32.6,
+          "binding_limit": "Edge Requests (15M > 10M included); Function Invocations (7.50M > 1M included)",
+          "pricing_type": "published list price",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": 85.0,
+          "hosting": 32.6
+        },
+        "total_weekly_cost_usd": 27.53,
+        "total_monthly_cost_usd": 117.98,
+        "total_annual_cost_usd": 1415.76,
+        "cost_per_1000_users_usd": 1.1798
+      },
       "supabase": {
-        "tier": "Pro + Compute ($45/mo)",
-        "monthly_cost_usd": 45.0,
-        "plan_limit": "Pro ($25) + $20 Small dedicated compute upgrade",
+        "tier": "Pro ($25/mo)",
+        "monthly_cost_usd": 25.0,
+        "binding_limit": "Connection pooler concurrency (1.5M queries/mo)",
         "pricing_type": "published list price",
         "source_url": "https://supabase.com/pricing",
         "last_verified": "2026-11-19"
       },
       "vercel": {
-        "tier": "Pro + Usage ($50/mo)",
-        "monthly_cost_usd": 50.0,
-        "plan_limit": "Pro base ($20) + $30 bandwidth/function overage",
-        "pricing_type": "published list price plus usage formula",
-        "basis": "Pro base $20/mo + $30 usage overage",
+        "tier": "Pro + Usage ($30.20/mo)",
+        "monthly_cost_usd": 30.2,
+        "binding_limit": "Edge Requests (15M > 10M included); Function Invocations (1.50M > 1M included)",
+        "pricing_type": "published list price",
         "source_url": "https://vercel.com/pricing",
         "last_verified": "2026-11-19"
       },
@@ -270,38 +495,113 @@
         "model": "openai/gpt-oss-20b",
         "pipeline_volume": "600 raw posts/day",
         "monthly_cost_usd": 0.3833,
-        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+        "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
       },
       "breakdown_monthly_usd": {
         "llm": 0.3833,
-        "database": 45.0,
-        "hosting": 50.0
+        "database": 25.0,
+        "hosting": 30.2
       },
-      "total_weekly_cost_usd": 22.26,
-      "total_monthly_cost_usd": 95.38,
-      "total_annual_cost_usd": 1144.6,
-      "cost_per_1000_users_usd": 0.9538
+      "total_weekly_cost_usd": 12.97,
+      "total_monthly_cost_usd": 55.58,
+      "total_annual_cost_usd": 666.96,
+      "cost_per_1000_users_usd": 0.5558
     },
     "1000000": {
       "daily_active_users": 1000000,
       "monthly_searches": 150000000,
-      "monthly_cdn_cache_hits": 120000000,
-      "monthly_db_queries": 30000000,
       "monthly_bandwidth_gb": 1430.51,
+      "baseline_90_pct_cdn": {
+        "cdn_hit_ratio_pct": 90,
+        "monthly_searches": 150000000,
+        "monthly_cdn_cache_hits": 135000000,
+        "monthly_origin_requests": 15000000,
+        "monthly_bandwidth_gb": 1430.51,
+        "monthly_origin_egress_gb": 143.05,
+        "supabase": {
+          "tier": "Enterprise / Team",
+          "monthly_cost_usd": null,
+          "binding_limit": "Dedicated cluster throughput required for 15M database queries/month",
+          "pricing_type": "contact sales",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Enterprise",
+          "monthly_cost_usd": null,
+          "binding_limit": "Edge Requests (150M) and Bandwidth (1.40 TB > 1 TB) exceed self-serve thresholds",
+          "pricing_type": "contact sales",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": null,
+          "hosting": null
+        },
+        "total_weekly_cost_usd": null,
+        "total_monthly_cost_usd": null,
+        "total_annual_cost_usd": null,
+        "cost_per_1000_users_usd": null
+      },
+      "sensitivity_50_pct_cdn": {
+        "cdn_hit_ratio_pct": 50,
+        "monthly_searches": 150000000,
+        "monthly_cdn_cache_hits": 75000000,
+        "monthly_origin_requests": 75000000,
+        "monthly_bandwidth_gb": 1430.51,
+        "monthly_origin_egress_gb": 715.26,
+        "supabase": {
+          "tier": "Enterprise / Team",
+          "monthly_cost_usd": null,
+          "binding_limit": "Dedicated cluster throughput required for 75M database queries/month",
+          "pricing_type": "contact sales",
+          "source_url": "https://supabase.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "vercel": {
+          "tier": "Enterprise",
+          "monthly_cost_usd": null,
+          "binding_limit": "Edge Requests (150M) and Bandwidth (1.40 TB > 1 TB) exceed self-serve thresholds",
+          "pricing_type": "contact sales",
+          "source_url": "https://vercel.com/pricing",
+          "last_verified": "2026-11-19"
+        },
+        "llm": {
+          "model": "openai/gpt-oss-20b",
+          "pipeline_volume": "600 raw posts/day",
+          "monthly_cost_usd": 0.3833,
+          "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
+        },
+        "breakdown_monthly_usd": {
+          "llm": 0.3833,
+          "database": null,
+          "hosting": null
+        },
+        "total_weekly_cost_usd": null,
+        "total_monthly_cost_usd": null,
+        "total_annual_cost_usd": null,
+        "cost_per_1000_users_usd": null
+      },
       "supabase": {
-        "tier": "Team ($599/mo)",
-        "monthly_cost_usd": 599.0,
-        "plan_limit": "Team tier with SLA, 16 GB DB, SOC2 compliance",
-        "pricing_type": "published list price",
+        "tier": "Enterprise / Team",
+        "monthly_cost_usd": null,
+        "binding_limit": "Dedicated cluster throughput required for 15M database queries/month",
+        "pricing_type": "contact sales",
         "source_url": "https://supabase.com/pricing",
         "last_verified": "2026-11-19"
       },
       "vercel": {
-        "tier": "Enterprise (estimate, custom pricing: $500/mo)",
-        "monthly_cost_usd": 500.0,
-        "plan_limit": "Custom contract with multi-region CDN and enterprise SLA",
-        "pricing_type": "estimate, custom pricing",
-        "basis": "Estimated contract: 150M edge req/mo, 1.5 TB bandwidth",
+        "tier": "Enterprise",
+        "monthly_cost_usd": null,
+        "binding_limit": "Edge Requests (150M) and Bandwidth (1.40 TB > 1 TB) exceed self-serve thresholds",
+        "pricing_type": "contact sales",
         "source_url": "https://vercel.com/pricing",
         "last_verified": "2026-11-19"
       },
@@ -309,17 +609,17 @@
         "model": "openai/gpt-oss-20b",
         "pipeline_volume": "600 raw posts/day",
         "monthly_cost_usd": 0.3833,
-        "dependency_note": "LLM cost scales with raw posts ingested, independent of DAU"
+        "dependency_note": "LLM cost scales strictly with raw posts ingested, independent of user volume"
       },
       "breakdown_monthly_usd": {
         "llm": 0.3833,
-        "database": 599.0,
-        "hosting": 500.0
+        "database": null,
+        "hosting": null
       },
-      "total_weekly_cost_usd": 256.52,
-      "total_monthly_cost_usd": 1099.38,
-      "total_annual_cost_usd": 13192.6,
-      "cost_per_1000_users_usd": 1.0994
+      "total_weekly_cost_usd": null,
+      "total_monthly_cost_usd": null,
+      "total_annual_cost_usd": null,
+      "cost_per_1000_users_usd": null
     }
   }
 }

@@ -186,15 +186,22 @@ def export_costs_csv(submission_dir: Path) -> None:
 
         writer.writerow([])
         # Section 2: Full-Stack Serving
-        writer.writerow(["SECTION 2: FULL-STACK SERVING SCENARIOS (LLM + DB + HOSTING)"])
+        writer.writerow(
+            ["SECTION 2: FULL-STACK SERVING SCENARIOS WITH CDN SENSITIVITY (LLM + DB + HOSTING)"]
+        )
         writer.writerow(
             [
                 "daily_active_users",
+                "cdn_hit_ratio_pct",
                 "monthly_searches",
+                "monthly_origin_requests",
+                "monthly_bandwidth_gb",
                 "supabase_tier",
                 "supabase_monthly_usd",
+                "supabase_binding_limit",
                 "vercel_tier",
                 "vercel_monthly_usd",
+                "vercel_binding_limit",
                 "llm_monthly_usd",
                 "total_weekly_usd",
                 "total_monthly_usd",
@@ -203,21 +210,70 @@ def export_costs_csv(submission_dir: Path) -> None:
             ]
         )
         for dau_str, s_data in costs_data.get("serving_scenarios", {}).items():
-            writer.writerow(
-                [
-                    dau_str,
-                    s_data["monthly_searches"],
-                    s_data["supabase"]["tier"],
-                    s_data["supabase"]["monthly_cost_usd"],
-                    s_data["vercel"]["tier"],
-                    s_data["vercel"]["monthly_cost_usd"],
-                    s_data["breakdown_monthly_usd"]["llm"],
-                    s_data["total_weekly_cost_usd"],
-                    s_data["total_monthly_cost_usd"],
-                    s_data["total_annual_cost_usd"],
-                    s_data["cost_per_1000_users_usd"],
-                ]
-            )
+            cases = []
+            if "baseline_90_pct_cdn" in s_data and "sensitivity_50_pct_cdn" in s_data:
+                cases = [s_data["baseline_90_pct_cdn"], s_data["sensitivity_50_pct_cdn"]]
+            else:
+                cases = [s_data]
+
+            for c in cases:
+                cdn_pct = c.get("cdn_hit_ratio_pct", 90)
+                supa_m = (
+                    c["supabase"]["monthly_cost_usd"]
+                    if c["supabase"]["monthly_cost_usd"] is not None
+                    else "contact sales"
+                )
+                vercel_m = (
+                    c["vercel"]["monthly_cost_usd"]
+                    if c["vercel"]["monthly_cost_usd"] is not None
+                    else "contact sales"
+                )
+                w_tot = (
+                    c["total_weekly_cost_usd"]
+                    if c["total_weekly_cost_usd"] is not None
+                    else "contact sales"
+                )
+                m_tot = (
+                    c["total_monthly_cost_usd"]
+                    if c["total_monthly_cost_usd"] is not None
+                    else "contact sales"
+                )
+                a_tot = (
+                    c["total_annual_cost_usd"]
+                    if c["total_annual_cost_usd"] is not None
+                    else "contact sales"
+                )
+                per_1k = (
+                    c["cost_per_1000_users_usd"]
+                    if c["cost_per_1000_users_usd"] is not None
+                    else "contact sales"
+                )
+
+                origin_reqs = c.get(
+                    "monthly_origin_requests",
+                    round(c["monthly_searches"] * (1 - cdn_pct / 100)),
+                )
+
+                writer.writerow(
+                    [
+                        dau_str,
+                        cdn_pct,
+                        c["monthly_searches"],
+                        origin_reqs,
+                        c["monthly_bandwidth_gb"],
+                        c["supabase"]["tier"],
+                        supa_m,
+                        c["supabase"].get("binding_limit", ""),
+                        c["vercel"]["tier"],
+                        vercel_m,
+                        c["vercel"].get("binding_limit", ""),
+                        c["breakdown_monthly_usd"]["llm"],
+                        w_tot,
+                        m_tot,
+                        a_tot,
+                        per_1k,
+                    ]
+                )
 
     print(f"Exported cost tables to {output_path}")
 

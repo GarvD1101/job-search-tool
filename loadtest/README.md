@@ -50,24 +50,27 @@ The test simulates realistic fresher job searches with a mix of:
 
 ## Execution Instructions
 
-1. Start local production build:
+> **Network Latency Note**:
+> When running tests against the live deployment from a local workstation in Delhi, measured HTTP response latencies include international network transit time (approximately 120 ms to 160 ms round trip) to the Tokyo-hosted Supabase PostgreSQL database (`ap-northeast-1`) and Vercel edge deployment.
+
+1. **Smoke Test against Live Deployment** (5 concurrent users for 1 minute):
+   ```powershell
+   k6 run --vus 5 --duration 1m -e BASE_URL=https://job-search-tool-rho.vercel.app --summary-export docs/results/k6_smoke_live.json loadtest/search.js
+   ```
+
+2. **Reduced Load Test against Live Deployment** (20 concurrent users for 2 minutes):
+   ```powershell
+   k6 run --vus 20 --duration 2m -e BASE_URL=https://job-search-tool-rho.vercel.app --summary-export docs/results/k6_reduced_live.json loadtest/search.js
+   ```
+
+3. **Full Profile Stress Test on Local Production Build** (50 concurrent users for 3 minutes):
+   Start the local production server:
    ```powershell
    cd web
    pnpm run build
    pnpm run start
    ```
-
-2. Smoke Test (5 concurrent users for 1 minute):
-   ```powershell
-   k6 run --vus 5 --duration 1m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_smoke.json loadtest/search.js
-   ```
-
-3. Reduced Load Test (20 concurrent users for 2 minutes, matches live scale):
-   ```powershell
-   k6 run --vus 20 --duration 2m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_reduced.json loadtest/search.js
-   ```
-
-4. Full Profile Load Test (50 concurrent users for 3 minutes, local production build):
+   Execute the full load profile in a separate shell:
    ```powershell
    k6 run --vus 50 --duration 3m -e BASE_URL=http://localhost:3000 --summary-export docs/results/k6_full.json loadtest/search.js
    ```
