@@ -1,5 +1,9 @@
 # Cost and scale assumptions for Fresher Radar pipeline and web serving
-# Last verified: 2026-11-19
+# Last verified: 2026-11-20
+# Official Sources:
+# - Groq Pricing: https://groq.com/pricing/
+# - Vercel Pricing: https://vercel.com/pricing
+# - Supabase Pricing: https://supabase.com/pricing
 
 measured_pipeline_metrics:
   # Measured from live production database (llm_calls and jobs tables)
@@ -16,7 +20,7 @@ measured_pipeline_metrics:
       output_price_per_1m: 0.30
       pricing_type: "published list price"
       source_url: "https://groq.com/pricing/"
-      last_verified: "2026-11-19"
+      last_verified: "2026-11-20"
 
     openai/gpt-oss-120b:
       input_tokens_per_post: 215.22
@@ -26,7 +30,7 @@ measured_pipeline_metrics:
       output_price_per_1m: 0.60
       pricing_type: "published list price"
       source_url: "https://groq.com/pricing/"
-      last_verified: "2026-11-19"
+      last_verified: "2026-11-20"
 
     qwen/qwen3.8-27b:
       input_tokens_per_post: 237.29
@@ -36,7 +40,7 @@ measured_pipeline_metrics:
       output_price_per_1m: 4.00
       pricing_type: "published list price"
       source_url: "https://groq.com/pricing/"
-      last_verified: "2026-11-19"
+      last_verified: "2026-11-20"
 
 pipeline_volume_scenarios:
   low:
@@ -54,70 +58,63 @@ serving_traffic_assumptions:
   cdn_cache_hit_rate_baseline: 0.90
   cdn_cache_hit_rate_sensitivity: 0.50
   avg_response_payload_kb: 10
-  commercial_note: "Vercel Hobby and Supabase Free are for personal, non-commercial use only. Commercial launches require Pro tiers."
+  production_launch_note: "Supabase Free auto-pauses after 1 week of inactivity and lacks point-in-time backups; production launch assumes Pro."
 
 serving_pricing_tiers:
   supabase:
     source_url: "https://supabase.com/pricing"
-    last_verified: "2026-11-19"
-    tiers:
-      free:
-        price_per_month: 0.0
-        pricing_type: "published list price (non-commercial only)"
-        max_db_size_mb: 500
-        max_egress_gb_per_month: 5.0
-        max_connections: 200
-        suitable_up_to_dau: 1000
-        note: "Pauses after 1 week inactivity. Free tier egress covers 10k users at 90% CDN, but lacks commercial SLA."
-      pro:
-        price_per_month: 25.0
-        pricing_type: "published list price"
-        included_db_size_gb: 8.0
-        included_egress_gb_per_month: 250.0
-        egress_overage_per_gb: 0.09
-        max_connections: 10000
-        suitable_up_to_dau: 50000
-      pro_with_medium_compute:
-        price_per_month: 85.0 # $25 base + $60 Medium compute addon
-        pricing_type: "published list price"
-        included_db_size_gb: 8.0
-        included_egress_gb_per_month: 250.0
-        max_connections: 10000
-        suitable_up_to_dau: 100000
-        note: "Required when 50% CDN hit ratio generates 7.5M origin queries/month."
-      team:
-        price_per_month: 599.0
-        pricing_type: "published list price"
-        included_db_size_gb: 16.0
-        included_egress_gb_per_month: 250.0
-        max_connections: 10000
-        suitable_up_to_dau: 1000000
-      enterprise:
-        price_per_month: null
-        pricing_type: "contact sales"
-        note: "Custom enterprise contract required for high-throughput multi-region clusters."
+    last_verified: "2026-11-20"
+    base_pro_price_per_month: 25.0
+    compute_credit_per_month: 10.0
+    included_egress_gb_per_month: 250.0
+    egress_overage_per_gb: 0.09
+    compute_tiers:
+      micro:
+        list_price: 10.0
+        net_addon_price: 0.0 # $10 - $10 credit
+        pooler_connections: 200
+        direct_connections: 60
+      small:
+        list_price: 15.0
+        net_addon_price: 5.0 # $15 - $10 credit
+        pooler_connections: 400
+        direct_connections: 90
+      medium:
+        list_price: 60.0
+        net_addon_price: 50.0 # $60 - $10 credit
+        pooler_connections: 600
+        direct_connections: 120
 
   vercel:
     source_url: "https://vercel.com/pricing"
-    last_verified: "2026-11-19"
-    tiers:
-      hobby:
+    last_verified: "2026-11-20"
+    pro_seat_price_per_month: 20.0
+    monthly_usage_credit: 20.0 # Comes with Pro seat, absorbs usage fees before billing
+    function_invocation_overage_per_1m: 0.60
+    included_function_invocations: 1000000 # 1M
+    included_fast_data_transfer_gb: 1024.0 # 1 TB
+    fast_data_transfer_overage_per_gb: 0.15
+
+    # September 2026 Flat Rate CDN Capacity Tiers
+    flat_rate_cdn:
+      included_pro:
         price_per_month: 0.0
-        pricing_type: "published list price (non-commercial only)"
-        included_bandwidth_gb_per_month: 100.0
-        suitable_up_to_dau: 1000
-        note: "Personal projects only. Not licensed for commercial production."
-      pro:
-        price_per_month: 20.0 # 1 team seat
-        pricing_type: "published list price"
-        included_edge_requests: 10000000 # 10M
-        included_function_invocations: 1000000 # 1M
-        included_bandwidth_tb_per_month: 1.0 # 1 TB
-        edge_request_overage_per_1m: 2.00
-        function_invocation_overage_per_1m: 0.40
-        bandwidth_overage_per_gb: 0.15
-        suitable_up_to_dau: 50000
-      enterprise:
-        price_per_month: null
-        pricing_type: "contact sales"
-        note: "Custom contract required beyond self-serve thresholds (>10M edge requests or custom SLA)."
+        max_cdn_requests: 1000000 # 1M
+        max_data_transfer_tb: 1.0
+      tier_1:
+        price_per_month: 20.0
+        max_cdn_requests: 10000000 # 10M
+        max_data_transfer_tb: 50.0
+      tier_2:
+        price_per_month: 100.0
+        max_cdn_requests: 50000000 # 50M
+        max_data_transfer_tb: 50.0
+      tier_3:
+        price_per_month: 300.0
+        max_cdn_requests: 150000000 # 150M
+        max_data_transfer_tb: 50.0
+
+    # On-Demand / Legacy Metered CDN Edge Requests Model
+    on_demand_cdn:
+      included_edge_requests: 10000000 # 10M
+      edge_request_overage_per_1m: 2.00

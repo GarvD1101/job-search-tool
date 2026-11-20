@@ -187,7 +187,10 @@ def export_costs_csv(submission_dir: Path) -> None:
         writer.writerow([])
         # Section 2: Full-Stack Serving
         writer.writerow(
-            ["SECTION 2: FULL-STACK SERVING SCENARIOS WITH CDN SENSITIVITY (LLM + DB + HOSTING)"]
+            [
+                "SECTION 2: FULL-STACK SERVING SCENARIOS WITH CDN SENSITIVITY "
+                "(FLAT RATE CDN VS ON-DEMAND COMPARISON)"
+            ]
         )
         writer.writerow(
             [
@@ -198,15 +201,18 @@ def export_costs_csv(submission_dir: Path) -> None:
                 "monthly_bandwidth_gb",
                 "supabase_tier",
                 "supabase_monthly_usd",
-                "supabase_binding_limit",
-                "vercel_tier",
-                "vercel_monthly_usd",
-                "vercel_binding_limit",
+                "supabase_published_binding",
+                "vercel_flat_rate_tier",
+                "vercel_flat_monthly_usd",
+                "vercel_on_demand_monthly_usd",
+                "vercel_published_binding",
                 "llm_monthly_usd",
-                "total_weekly_usd",
-                "total_monthly_usd",
-                "total_annual_usd",
+                "total_weekly_flat_usd",
+                "total_monthly_flat_usd",
+                "total_annual_flat_usd",
+                "total_monthly_on_demand_usd",
                 "cost_per_1000_users_usd",
+                "architecture_notes",
             ]
         )
         for dau_str, s_data in costs_data.get("serving_scenarios", {}).items():
@@ -218,41 +224,28 @@ def export_costs_csv(submission_dir: Path) -> None:
 
             for c in cases:
                 cdn_pct = c.get("cdn_hit_ratio_pct", 90)
-                supa_m = (
-                    c["supabase"]["monthly_cost_usd"]
-                    if c["supabase"]["monthly_cost_usd"] is not None
-                    else "contact sales"
+                supa_m = c["supabase"]["monthly_cost_usd"]
+                vercel_flat_m = c["vercel"]["monthly_cost_usd"]
+                vercel_on_demand_m = (
+                    c["vercel"].get("on_demand_model", {}).get("monthly_cost_usd", vercel_flat_m)
                 )
-                vercel_m = (
-                    c["vercel"]["monthly_cost_usd"]
-                    if c["vercel"]["monthly_cost_usd"] is not None
-                    else "contact sales"
+                w_tot = c["total_weekly_cost_usd"]
+                m_tot = c["total_monthly_cost_usd"]
+                a_tot = c["total_annual_cost_usd"]
+                m_tot_ondemand = (
+                    c.get("on_demand_totals", {}).get("total_monthly_cost_usd", m_tot)
                 )
-                w_tot = (
-                    c["total_weekly_cost_usd"]
-                    if c["total_weekly_cost_usd"] is not None
-                    else "contact sales"
-                )
-                m_tot = (
-                    c["total_monthly_cost_usd"]
-                    if c["total_monthly_cost_usd"] is not None
-                    else "contact sales"
-                )
-                a_tot = (
-                    c["total_annual_cost_usd"]
-                    if c["total_annual_cost_usd"] is not None
-                    else "contact sales"
-                )
-                per_1k = (
-                    c["cost_per_1000_users_usd"]
-                    if c["cost_per_1000_users_usd"] is not None
-                    else "contact sales"
-                )
+                per_1k = c["cost_per_1000_users_usd"]
 
                 origin_reqs = c.get(
                     "monthly_origin_requests",
                     round(c["monthly_searches"] * (1 - cdn_pct / 100)),
                 )
+                supa_binding = c["supabase"].get("published_binding_limits", "")
+                vercel_binding = c["vercel"].get("published_binding_limits", "")
+                notes = c["supabase"].get("architecture_assumption", "")
+                if c.get("enterprise_note"):
+                    notes = f"{notes}; {c['enterprise_note']}".strip("; ")
 
                 writer.writerow(
                     [
@@ -263,15 +256,18 @@ def export_costs_csv(submission_dir: Path) -> None:
                         c["monthly_bandwidth_gb"],
                         c["supabase"]["tier"],
                         supa_m,
-                        c["supabase"].get("binding_limit", ""),
+                        supa_binding,
                         c["vercel"]["tier"],
-                        vercel_m,
-                        c["vercel"].get("binding_limit", ""),
+                        vercel_flat_m,
+                        vercel_on_demand_m,
+                        vercel_binding,
                         c["breakdown_monthly_usd"]["llm"],
                         w_tot,
                         m_tot,
                         a_tot,
+                        m_tot_ondemand,
                         per_1k,
+                        notes,
                     ]
                 )
 

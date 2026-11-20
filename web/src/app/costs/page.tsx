@@ -218,7 +218,7 @@ export default function CostsPage() {
               TABLE 02 // SERVING SCENARIOS WITH CDN SENSITIVITY (LLM + DATABASE + HOSTING)
             </h2>
             <span className="font-mono text-[10px] text-ink-muted">
-              90% BASELINE VS 50% SENSITIVITY
+              90% BASELINE VS 50% SENSITIVITY · FLAT RATE & ON-DEMAND MODELS
             </span>
           </div>
 
@@ -229,8 +229,8 @@ export default function CostsPage() {
                   <th className="px-3 py-2.5 font-semibold">DAU</th>
                   <th className="px-3 py-2.5 font-semibold">CDN CACHE</th>
                   <th className="px-3 py-2.5 font-semibold">MONTHLY VOL</th>
-                  <th className="px-3 py-2.5 font-semibold">SUPABASE TIER & LIMIT</th>
-                  <th className="px-3 py-2.5 font-semibold">VERCEL TIER & LIMIT</th>
+                  <th className="px-3 py-2.5 font-semibold">SUPABASE TIER & PUBLISHED LIMITS</th>
+                  <th className="px-3 py-2.5 font-semibold">VERCEL TIER & PUBLISHED LIMITS</th>
                   <th className="px-3 py-2.5 text-right font-semibold">LLM / MO</th>
                   <th className="px-3 py-2.5 text-right font-semibold">WEEKLY (7D)</th>
                   <th className="px-3 py-2.5 text-right font-semibold">MONTHLY (30D)</th>
@@ -248,7 +248,6 @@ export default function CostsPage() {
 
                   return cases.map((c, idx) => {
                     const isFirst = idx === 0;
-                    const isEnterprise = dau === 1000000;
 
                     return (
                       <tr
@@ -282,44 +281,46 @@ export default function CostsPage() {
 
                         <td className="px-3 py-2.5">
                           <span className="font-mono font-semibold text-ink text-xs block truncate">
-                            {c.supabase.tier}
+                            {c.supabase.tier} (${formatUsd(c.supabase.monthly_cost_usd)}/mo)
                           </span>
-                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[220px]">
-                            {c.supabase.binding_limit}
+                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[240px]">
+                            Limits: {c.supabase.published_binding_limits}
                           </span>
+                          {c.supabase.architecture_assumption && (
+                            <span className="font-sans text-[10px] text-ink-muted/80 block truncate mt-0.5 max-w-[240px]">
+                              Assumption: {c.supabase.architecture_assumption}
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-3 py-2.5">
                           <span className="font-mono font-semibold text-ink text-xs block truncate">
-                            {c.vercel.tier}
+                            {c.vercel.tier} (${formatUsd(c.vercel.monthly_cost_usd)}/mo)
                           </span>
-                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[220px]">
-                            {c.vercel.binding_limit}
+                          <span className="font-mono text-[10px] text-ink-muted block truncate mt-0.5 max-w-[240px]">
+                            Limits: {c.vercel.published_binding_limits}
                           </span>
+                          {c.vercel.on_demand_model && (
+                            <span className="font-mono text-[10px] text-ink-muted/80 block truncate mt-0.5 max-w-[240px]">
+                              On-Demand Model: {formatUsd(c.vercel.on_demand_model.monthly_cost_usd)}/mo (Total: {formatUsd(c.on_demand_totals?.total_monthly_cost_usd || c.total_monthly_cost_usd)}/mo)
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap text-ink-muted">
                           {formatUsd(c.breakdown_monthly_usd.llm, 2)}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap text-ink">
-                          {c.total_weekly_cost_usd !== null
-                            ? formatUsd(c.total_weekly_cost_usd, 2)
-                            : "contact sales"}
+                          {formatUsd(c.total_weekly_cost_usd, 2)}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-bold text-ink">
-                          {c.total_monthly_cost_usd !== null
-                            ? formatUsd(c.total_monthly_cost_usd, 2)
-                            : "contact sales"}
+                          {formatUsd(c.total_monthly_cost_usd, 2)}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-semibold text-ink">
-                          {c.total_annual_cost_usd !== null
-                            ? formatUsd(c.total_annual_cost_usd, 2)
-                            : "contact sales"}
+                          {formatUsd(c.total_annual_cost_usd, 2)}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap font-bold text-amber-signal">
-                          {c.cost_per_1000_users_usd !== null
-                            ? formatUsd(c.cost_per_1000_users_usd, 4)
-                            : "contact sales"}
+                          {formatUsd(c.cost_per_1000_users_usd, 4)}
                         </td>
                       </tr>
                     );
@@ -329,17 +330,28 @@ export default function CostsPage() {
             </table>
           </div>
 
-          {/* Commercial Deployment Callout */}
-          <div className="bg-canvas border border-grid p-3.5 font-mono text-xs text-ink-secondary space-y-1.5">
+          {/* Commercial Deployment & Official Pricing Mechanics Callout */}
+          <div className="bg-canvas border border-grid p-3.5 font-mono text-xs text-ink-secondary space-y-2">
             <span className="font-bold text-ink uppercase tracking-wider block text-[11px]">
-              COMMERCIAL DEPLOYMENT AND 10K CASE EXPLANATION
+              VERIFIED OFFICIAL PRICING MECHANICS AND TIER ASSUMPTIONS
             </span>
-            <p className="text-[11px] leading-relaxed font-sans">
-              <strong>Why the 10k case changed from ~$45 to $20/month:</strong> In pure resource-consumption accounting, 10,000 DAU at 90% CDN cache hit ratio generates only 150,000 origin queries (1.43 GB egress/mo). Because Supabase Free includes 5.0 GB egress and 500 MB DB storage at $0/mo, strict resource billing incurs $0 for the database and $20/mo for Vercel Pro ($20.00/mo total). However, Supabase Free pauses after one week of inactivity and enforces a 200 connection ceiling. A production launch requires Supabase Pro ($25/mo), establishing the commercial production floor at $45.00/mo ($20 Vercel Pro + $25 Supabase Pro).
-            </p>
-            <p className="text-[11px] leading-relaxed font-sans text-ink-muted">
-              At 1,000,000 users, monthly traffic (150M edge requests, 15M to 75M origin function calls, 1.43 TB bandwidth) exceeds published self-serve limits, requiring custom Enterprise contracts with no invented numbers.
-            </p>
+            <div className="space-y-1.5 font-sans text-[11px] leading-relaxed">
+              <p>
+                <strong>1. Vercel Function Invocations and Usage Credit:</strong> Pro seat ($20/seat/mo) includes 1M function invocations and a $20 monthly usage credit. Invocations past 1M cost $0.60 per 1M. The $20 usage credit absorbs invocation overages and data transfer charges before additional billing.
+              </p>
+              <p>
+                <strong>2. Vercel Flat Rate CDN vs On-Demand Metered CDN:</strong> In September 2026, Vercel introduced Flat Rate CDN capacity tiers (Included with Pro up to 1M req and 1 TB transfer; Tier 1 is $20/mo for 10M req and 50 TB; Tier 2 is $100/mo for 50M req; Tier 3 is $300/mo for 150M req). Table 02 defaults to Flat Rate CDN and displays the On-Demand Metered model ($2.00/1M edge requests over 10M) in the table subtext.
+              </p>
+              <p>
+                <strong>3. Supabase Compute Credit and Connection Pooling:</strong> Pro is $25/mo per organization and includes a $10 monthly compute credit. Micro compute ($10 list) is net $0 extra. Small compute ($15 list) is net $5 extra. Medium compute ($60 list) is net $50 extra ($75 total). Egress overage past 250 GB is $0.09/GB. Published connection pooler limits are 200 on Micro, 400 on Small, and 600 on Medium. Free tier auto-pauses after 1 week of inactivity and lacks point-in-time backups, so a production launch assumes Pro.
+              </p>
+              <p>
+                <strong>4. Published Limits vs Assumptions:</strong> The binding limits column lists only published hard limits (pooler connections, requests, invocations, egress). Hardware sizing choices (e.g. Medium compute for 7.5M queries/month) are labeled as architectural assumptions.
+              </p>
+              <p>
+                <strong>5. 1,000,000 Users Scale:</strong> Fully computed from published list rates. At 90% CDN hit, monthly cost is $395.38 ($320 Vercel + $75 Supabase + $0.38 LLM). At 50% CDN, monthly cost is $461.65 ($344.40 Vercel + $116.87 Supabase + $0.38 LLM). While organizations at 150M monthly requests typically negotiate enterprise agreements for volume discounts, published self-serve rates yield exact computed projections.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -371,7 +383,7 @@ export default function CostsPage() {
               </p>
             </div>
             <div className="pt-2 border-t border-grid/60 text-[10px] text-ink-muted">
-              LAST VERIFIED: 2026-11-19
+              LAST VERIFIED: 2026-11-20
             </div>
           </div>
 
@@ -391,11 +403,11 @@ export default function CostsPage() {
                 </a>
               </div>
               <p className="text-[11px] text-ink-secondary font-sans mt-2 leading-relaxed">
-                Free: $0/mo (500 MB DB, 5 GB egress, 200 pool connections, non-commercial). Pro: $25/mo (8 GB DB, 250 GB egress, 10,000 pool connections). Enterprise: custom contract (contact sales).
+                Pro: $25/mo per org with $10 compute credit. Micro ($10 list, net $0, 200 pooler conn). Small ($15 list, net $5, 400 pooler conn). Medium ($60 list, net $50, 600 pooler conn). Egress: 250 GB included, $0.09/GB overage.
               </p>
             </div>
             <div className="pt-2 border-t border-grid/60 text-[10px] text-ink-muted">
-              LAST VERIFIED: 2026-11-19
+              LAST VERIFIED: 2026-11-20
             </div>
           </div>
 
@@ -415,11 +427,11 @@ export default function CostsPage() {
                 </a>
               </div>
               <p className="text-[11px] text-ink-secondary font-sans mt-2 leading-relaxed">
-                Hobby: $0/mo (100 GB BW, personal use only). Pro: $20/seat/mo (10M edge requests, 1M function invocations, 1 TB bandwidth). Enterprise: custom contract (contact sales, required beyond self-serve thresholds).
+                Pro: $20/seat/mo with $20 usage credit. Function overage: $0.60/1M. Flat Rate CDN: Included (1M req, 1 TB), Tier 1 ($20, 10M req, 50 TB), Tier 2 ($100, 50M req), Tier 3 ($300, 150M req). Metered CDN: $2.00/1M edge requests over 10M.
               </p>
             </div>
             <div className="pt-2 border-t border-grid/60 text-[10px] text-ink-muted">
-              LAST VERIFIED: 2026-11-19
+              LAST VERIFIED: 2026-11-20
             </div>
           </div>
         </div>

@@ -65,7 +65,7 @@ def generate_cost_report() -> dict[str, Any]:
                 "cost_per_1000_raw_posts_usd": round(cost_per_1000_raw, 4),
                 "pricing_type": m_spec.get("pricing_type", "published list price"),
                 "source_url": m_spec.get("source_url", "https://groq.com/pricing/"),
-                "last_verified": m_spec.get("last_verified", "2026-11-19"),
+                "last_verified": m_spec.get("last_verified", "2026-11-20"),
             }
 
         pipeline_scenarios[str(volume)] = {
@@ -81,7 +81,6 @@ def generate_cost_report() -> dict[str, Any]:
     ]
 
     # 2. Serving Scenarios (1,000 / 10,000 / 100,000 / 1,000,000 users)
-    # Sensitivity analysis: 90% CDN hit vs 50% CDN hit
     dau_tiers = [1000, 10000, 100000, 1000000]
     serving_scenarios = {}
 
@@ -92,110 +91,136 @@ def generate_cost_report() -> dict[str, Any]:
         total_bandwidth_gb = round((monthly_searches * 10) / (1024 * 1024), 2)
         origin_egress_gb = round((origin_requests * 10) / (1024 * 1024), 2)
 
-        if users == 1000000:
-            vercel_tier = "Enterprise"
-            vercel_monthly = None
-            vercel_binding_limit = (
-                f"Edge Requests ({monthly_searches / 1_000_000:.0f}M) and "
-                f"Bandwidth ({total_bandwidth_gb / 1024:.2f} TB > 1 TB) "
-                "exceed self-serve thresholds"
-            )
-            vercel_pricing_type = "contact sales"
+        # --- Vercel Calculations ---
+        # Base Pro seat: $20.00/mo, includes 1M function invocations and $20 usage credit.
+        base_vercel = 20.0
+        usage_credit = 20.0
 
-            supabase_tier = "Enterprise / Team"
-            supabase_monthly = None
-            supabase_binding_limit = (
-                f"Dedicated cluster throughput required for "
-                f"{origin_requests / 1_000_000:.0f}M database queries/month"
-            )
-            supabase_pricing_type = "contact sales"
+        # Function invocation overage: $0.60 per 1M beyond 1M included
+        func_overage_m = max(0.0, (origin_requests - 1_000_000) / 1_000_000)
+        raw_func_fee = round(func_overage_m * 0.60, 2)
+
+        # Model A: Flat Rate CDN Tiers (September 2026)
+        # Covers CDN requests and Data Transfer (50 TB allowance)
+        if monthly_searches <= 1_000_000:
+            flat_cdn_addon = 0.0
+            flat_cdn_tier_label = "Included with Pro (1M req, 1 TB transfer)"
+            flat_binding_cdn = "1M CDN requests, 1 TB transfer"
+        elif monthly_searches <= 10_000_000:
+            flat_cdn_addon = 20.0
+            flat_cdn_tier_label = "Flat Rate Tier 1 ($20/mo, 10M req, 50 TB)"
+            flat_binding_cdn = "10M CDN requests, 50 TB transfer"
+        elif monthly_searches <= 50_000_000:
+            flat_cdn_addon = 100.0
+            flat_cdn_tier_label = "Flat Rate Tier 2 ($100/mo, 50M req, 50 TB)"
+            flat_binding_cdn = "50M CDN requests, 50 TB transfer"
+        elif monthly_searches <= 150_000_000:
+            flat_cdn_addon = 300.0
+            flat_cdn_tier_label = "Flat Rate Tier 3 ($300/mo, 150M req, 50 TB)"
+            flat_binding_cdn = "150M CDN requests, 50 TB transfer"
         else:
-            # Vercel Pro derivation
-            base_vercel = 20.0  # 1 seat Pro
-            edge_overage_m = max(0.0, (monthly_searches - 10_000_000) / 1_000_000)
-            edge_cost = edge_overage_m * 2.00
-            func_overage_m = max(0.0, (origin_requests - 1_000_000) / 1_000_000)
-            func_cost = func_overage_m * 0.40
-            bw_overage_gb = max(0.0, total_bandwidth_gb - 1024.0)
-            bw_cost = bw_overage_gb * 0.15
-
-            vercel_monthly = round(base_vercel + edge_cost + func_cost + bw_cost, 2)
-            if edge_cost > 0 or func_cost > 0 or bw_cost > 0:
-                vercel_tier = f"Pro + Usage (${vercel_monthly:.2f}/mo)"
-            else:
-                vercel_tier = "Pro ($20/mo)"
-
-            v_limits = []
-            if edge_cost > 0:
-                v_limits.append(
-                    f"Edge Requests ({monthly_searches / 1_000_000:.0f}M > 10M included)"
-                )
-            if func_cost > 0:
-                v_limits.append(
-                    f"Function Invocations ({origin_requests / 1_000_000:.2f}M > 1M included)"
-                )
-            if bw_cost > 0:
-                v_limits.append(
-                    f"Bandwidth ({total_bandwidth_gb:.1f} GB > 1 TB included)"
-                )
-            if not v_limits:
-                if origin_requests > 500_000:
-                    v_limits.append(
-                        f"Function Invocations ({origin_requests / 1_000:.0f}k / 1M allowance)"
-                    )
-                else:
-                    v_limits.append("Base 1-seat Pro subscription")
-            vercel_binding_limit = "; ".join(v_limits)
-            vercel_pricing_type = "published list price"
-
-            # Supabase derivation
-            if users == 100000 and cdn_hit_rate < 0.60:
-                # 7.5M origin queries requires Medium Compute upgrade
-                supabase_tier = "Pro + Medium Compute ($85/mo)"
-                supabase_monthly = 85.0
-                supabase_binding_limit = (
-                    "Postgres compute RAM and connection pooler throughput "
-                    "(7.5M queries/mo)"
-                )
-            else:
-                supabase_tier = "Pro ($25/mo)"
-                supabase_monthly = 25.0
-                if users == 1000:
-                    supabase_binding_limit = (
-                        "Base Pro subscription (Free covers 1.43 GB egress, "
-                        "lacks commercial SLA)"
-                    )
-                elif users == 10000:
-                    if cdn_hit_rate >= 0.80:
-                        supabase_binding_limit = (
-                            "Base Pro subscription (Free covers 1.43 GB egress, "
-                            "lacks SLA/pausing protection)"
-                        )
-                    else:
-                        supabase_binding_limit = (
-                            "Egress (7.15 GB) exceeds 5 GB Free tier cap; "
-                            "mandates Pro tier"
-                        )
-                elif users == 100000:
-                    supabase_binding_limit = (
-                        "Connection pooler concurrency (1.5M queries/mo)"
-                    )
-                else:
-                    supabase_binding_limit = "Base Pro subscription"
-            supabase_pricing_type = "published list price"
-
-        if vercel_monthly is not None and supabase_monthly is not None:
-            total_monthly = round(
-                vercel_monthly + supabase_monthly + baseline_llm_monthly, 2
+            flat_cdn_addon = 300.0 + (
+                (monthly_searches - 150_000_000) / 50_000_000
+            ) * 100.0
+            flat_cdn_tier_label = (
+                f"Flat Rate Custom (${flat_cdn_addon:.2f}/mo, 50 TB)"
             )
-            total_weekly = round((total_monthly * 7) / 30, 2)
-            total_annual = round(total_monthly * 12, 2)
-            cost_per_1000 = round((total_monthly / users) * 1000, 4)
+            flat_binding_cdn = f"{monthly_searches/1_000_000:.0f}M CDN requests, 50 TB transfer"
+
+        # In Flat Rate model, the $20 usage credit absorbs function overage fees
+        flat_net_func_fee = max(0.0, raw_func_fee - usage_credit)
+        vercel_flat_total = round(base_vercel + flat_cdn_addon + flat_net_func_fee, 2)
+
+        # Model B: On-Demand Metered Model
+        # Includes 10M Edge Requests, 1M Function Invocations, 1 TB Data Transfer
+        edge_overage_m = max(0.0, (monthly_searches - 10_000_000) / 1_000_000)
+        raw_edge_fee = round(edge_overage_m * 2.00, 2)
+        bw_overage_gb = max(0.0, total_bandwidth_gb - 1024.0)
+        raw_bw_fee = round(bw_overage_gb * 0.15, 2)
+
+        total_metered_usage_fees = raw_edge_fee + raw_func_fee + raw_bw_fee
+        metered_net_usage_fee = max(0.0, total_metered_usage_fees - usage_credit)
+        vercel_metered_total = round(base_vercel + metered_net_usage_fee, 2)
+
+        # Published binding limit string for Vercel
+        v_binding_items = [flat_binding_cdn]
+        if origin_requests > 1_000_000:
+            v_binding_items.append(
+                f"{origin_requests / 1_000_000:.2f}M function invocations"
+            )
         else:
-            total_monthly = None
-            total_weekly = None
-            total_annual = None
-            cost_per_1000 = None
+            v_binding_items.append("1M function invocations")
+        vercel_published_binding = "; ".join(v_binding_items)
+
+        # --- Supabase Calculations ---
+        # Base Pro: $25.00/mo per org, includes $10.00 compute credit.
+        # Micro ($10 list): $0 net addon. Pooler connections: 200.
+        # Small ($15 list): $5 net addon. Pooler connections: 400.
+        # Medium ($60 list): $50 net addon. Pooler connections: 600.
+        # Included egress: 250 GB. Past 250 GB: $0.09 per GB.
+        egress_overage_gb = max(0.0, origin_egress_gb - 250.0)
+        egress_overage_cost = round(egress_overage_gb * 0.09, 2)
+
+        if users <= 10000:
+            supa_compute_addon_net = 0.0
+            supa_tier_label = "Pro + Micro Compute (200 pooler conn)"
+            supa_binding_items = ["200 pooler connections", "250 GB egress"]
+            supa_assumption = "Micro compute is sufficient for <= 150k queries/month"
+        elif users == 100000:
+            if cdn_hit_rate >= 0.80:
+                supa_compute_addon_net = 0.0
+                supa_tier_label = "Pro + Micro Compute (200 pooler conn)"
+                supa_binding_items = ["200 pooler connections", "250 GB egress"]
+                supa_assumption = "Micro compute handles 1.5M cached queries/month"
+            else:
+                supa_compute_addon_net = 50.0  # Medium: $60 - $10 credit
+                supa_tier_label = "Pro + Medium Compute (600 pooler conn)"
+                supa_binding_items = ["600 pooler connections", "250 GB egress"]
+                supa_assumption = "Medium compute assumed to sustain 7.5M queries/month"
+        else:  # 1,000,000 users
+            supa_compute_addon_net = 50.0  # Medium: $60 - $10 credit
+            supa_tier_label = "Pro + Medium Compute (600 pooler conn)"
+            if egress_overage_cost > 0:
+                supa_binding_items = [
+                    "600 pooler connections",
+                    (
+                        f"250 GB egress ({egress_overage_gb:.1f} GB overage: "
+                        f"${egress_overage_cost:.2f})"
+                    ),
+                ]
+            else:
+                supa_binding_items = ["600 pooler connections", "250 GB egress"]
+            supa_assumption = (
+                "Medium compute assumed; at 150M searches, sales discussion "
+                "for enterprise SLA is typical"
+            )
+
+        supabase_total = round(
+            25.0 + supa_compute_addon_net + egress_overage_cost, 2
+        )
+        supabase_published_binding = "; ".join(supa_binding_items)
+
+        # Full-stack Totals (Using Flat Rate CDN as default, with On-Demand comparison)
+        total_monthly_flat = round(
+            vercel_flat_total + supabase_total + baseline_llm_monthly, 2
+        )
+        total_weekly_flat = round((total_monthly_flat * 7) / 30, 2)
+        total_annual_flat = round(total_monthly_flat * 12, 2)
+        cost_per_1000_flat = round((total_monthly_flat / users) * 1000, 4)
+
+        total_monthly_metered = round(
+            vercel_metered_total + supabase_total + baseline_llm_monthly, 2
+        )
+        total_weekly_metered = round((total_monthly_metered * 7) / 30, 2)
+        total_annual_metered = round(total_monthly_metered * 12, 2)
+        cost_per_1000_metered = round((total_monthly_metered / users) * 1000, 4)
+
+        enterprise_note = ""
+        if users >= 1000000:
+            enterprise_note = (
+                "Computed using published self-serve list rates. At 150M searches/mo, "
+                "teams typically negotiate custom enterprise agreements for volume discounts."
+            )
 
         return {
             "cdn_hit_ratio_pct": int(cdn_hit_rate * 100),
@@ -204,21 +229,40 @@ def generate_cost_report() -> dict[str, Any]:
             "monthly_origin_requests": origin_requests,
             "monthly_bandwidth_gb": total_bandwidth_gb,
             "monthly_origin_egress_gb": origin_egress_gb,
-            "supabase": {
-                "tier": supabase_tier,
-                "monthly_cost_usd": supabase_monthly,
-                "binding_limit": supabase_binding_limit,
-                "pricing_type": supabase_pricing_type,
-                "source_url": "https://supabase.com/pricing",
-                "last_verified": "2026-11-19",
-            },
             "vercel": {
-                "tier": vercel_tier,
-                "monthly_cost_usd": vercel_monthly,
-                "binding_limit": vercel_binding_limit,
-                "pricing_type": vercel_pricing_type,
+                "flat_rate_model": {
+                    "tier": flat_cdn_tier_label,
+                    "cdn_addon_usd": flat_cdn_addon,
+                    "raw_func_fee_usd": raw_func_fee,
+                    "applied_credit_usd": min(usage_credit, raw_func_fee),
+                    "monthly_cost_usd": vercel_flat_total,
+                },
+                "on_demand_model": {
+                    "tier": "Pro + On-Demand Overages",
+                    "raw_edge_fee_usd": raw_edge_fee,
+                    "raw_func_fee_usd": raw_func_fee,
+                    "raw_bw_fee_usd": raw_bw_fee,
+                    "applied_credit_usd": min(usage_credit, total_metered_usage_fees),
+                    "monthly_cost_usd": vercel_metered_total,
+                },
+                "tier": flat_cdn_tier_label,
+                "monthly_cost_usd": vercel_flat_total,
+                "published_binding_limits": vercel_published_binding,
+                "pricing_type": "published list price (includes $20 monthly usage credit)",
                 "source_url": "https://vercel.com/pricing",
-                "last_verified": "2026-11-19",
+                "last_verified": "2026-11-20",
+            },
+            "supabase": {
+                "tier": supa_tier_label,
+                "monthly_cost_usd": supabase_total,
+                "base_pro_usd": 25.0,
+                "compute_addon_net_usd": supa_compute_addon_net,
+                "egress_overage_usd": egress_overage_cost,
+                "published_binding_limits": supabase_published_binding,
+                "architecture_assumption": supa_assumption,
+                "pricing_type": "published list price (includes $10 monthly compute credit)",
+                "source_url": "https://supabase.com/pricing",
+                "last_verified": "2026-11-20",
             },
             "llm": {
                 "model": "openai/gpt-oss-20b",
@@ -231,13 +275,22 @@ def generate_cost_report() -> dict[str, Any]:
             },
             "breakdown_monthly_usd": {
                 "llm": baseline_llm_monthly,
-                "database": supabase_monthly,
-                "hosting": vercel_monthly,
+                "supabase": supabase_total,
+                "vercel": vercel_flat_total,
+                "database": supabase_total,
+                "hosting": vercel_flat_total,
             },
-            "total_weekly_cost_usd": total_weekly,
-            "total_monthly_cost_usd": total_monthly,
-            "total_annual_cost_usd": total_annual,
-            "cost_per_1000_users_usd": cost_per_1000,
+            "total_weekly_cost_usd": total_weekly_flat,
+            "total_monthly_cost_usd": total_monthly_flat,
+            "total_annual_cost_usd": total_annual_flat,
+            "cost_per_1000_users_usd": cost_per_1000_flat,
+            "on_demand_totals": {
+                "total_weekly_cost_usd": total_weekly_metered,
+                "total_monthly_cost_usd": total_monthly_metered,
+                "total_annual_cost_usd": total_annual_metered,
+                "cost_per_1000_users_usd": cost_per_1000_metered,
+            },
+            "enterprise_note": enterprise_note,
         }
 
     for dau in dau_tiers:
@@ -259,13 +312,17 @@ def generate_cost_report() -> dict[str, Any]:
             "total_monthly_cost_usd": baseline_case["total_monthly_cost_usd"],
             "total_annual_cost_usd": baseline_case["total_annual_cost_usd"],
             "cost_per_1000_users_usd": baseline_case["cost_per_1000_users_usd"],
+            "enterprise_note": baseline_case["enterprise_note"],
         }
 
     report = {
         "title": "Fresher Radar Cost & Scale Projections",
         "generated_at": "2026-11-20",
         "notes": (
-            "Projections derived from official pricing pages and measured pipeline parameters."
+            "Projections derived from official pricing pages (vercel.com/pricing, "
+            "supabase.com/pricing, groq.com/pricing). All tiers reflect published list rates, "
+            "including Vercel $20 usage credit, Vercel Flat Rate CDN capacity tiers, and "
+            "Supabase $10 compute credit."
         ),
         "pipeline_assumptions": {
             "survivor_rate": survivor_rate,
@@ -317,39 +374,27 @@ def print_console_summary(report: dict[str, Any]) -> None:
             )
 
     print("\n" + "=" * 70)
-    print("FULL-STACK SERVING SCENARIOS WITH CDN SENSITIVITY (90% vs 50%)")
+    print("FULL-STACK SERVING SCENARIOS WITH CDN SENSITIVITY (FLAT RATE CDN)")
     print("=" * 70)
     print(
-        f"{'DAU':<8} | {'CDN':<5} | {'Origin Reqs':<12} | {'Supabase Tier':<22} | "
-        f"{'Vercel Tier':<20} | {'Monthly Total':<13} | {'Weekly (7d)':<11} | {'Annual (365d)'}"
+        f"{'DAU':<8} | {'CDN':<5} | {'Origin Reqs':<12} | {'Supabase':<10} | "
+        f"{'Vercel Flat':<12} | {'Monthly Total':<13} | {'Weekly (7d)':<11} | {'Annual (365d)'}"
     )
-    print("-" * 115)
+    print("-" * 95)
     for dau_str, data in report["serving_scenarios"].items():
         dau = data["daily_active_users"]
         for case_key in ["baseline_90_pct_cdn", "sensitivity_50_pct_cdn"]:
             c = data[case_key]
             cdn_lbl = f"{c['cdn_hit_ratio_pct']}%"
             origin_lbl = f"{c['monthly_origin_requests'] / 1_000:,.0f}k"
-            supa_tier = c["supabase"]["tier"]
-            vercel_tier = c["vercel"]["tier"]
-            m_tot = (
-                f"${c['total_monthly_cost_usd']:.2f}"
-                if c["total_monthly_cost_usd"] is not None
-                else "contact sales"
-            )
-            w_tot = (
-                f"${c['total_weekly_cost_usd']:.2f}"
-                if c["total_weekly_cost_usd"] is not None
-                else "contact sales"
-            )
-            a_tot = (
-                f"${c['total_annual_cost_usd']:.2f}"
-                if c["total_annual_cost_usd"] is not None
-                else "contact sales"
-            )
+            supa_cost = f"${c['supabase']['monthly_cost_usd']:.2f}"
+            vercel_cost = f"${c['vercel']['monthly_cost_usd']:.2f}"
+            m_tot = f"${c['total_monthly_cost_usd']:.2f}"
+            w_tot = f"${c['total_weekly_cost_usd']:.2f}"
+            a_tot = f"${c['total_annual_cost_usd']:.2f}"
             print(
-                f"{dau:<8} | {cdn_lbl:<5} | {origin_lbl:<12} | {supa_tier:<22} | "
-                f"{vercel_tier:<20} | {m_tot:<13} | {w_tot:<11} | {a_tot}"
+                f"{dau:<8} | {cdn_lbl:<5} | {origin_lbl:<12} | {supa_cost:<10} | "
+                f"{vercel_cost:<12} | {m_tot:<13} | {w_tot:<11} | {a_tot}"
             )
 
 
